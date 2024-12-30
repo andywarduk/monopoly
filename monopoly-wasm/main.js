@@ -70,89 +70,211 @@ function process_ready(data) {
         // Find square table cell
         let elem = document.getElementById(index.toString());
 
-        // Create div
-        let div = document.createElement("div");
-
+        // Calculate orientation
         let orient;
+        let side;
 
         if (index == 0) {
             orient = "nw";
+            side = "c";
         } else if (index < 10) {
             orient = "n";
+            side = "tb";
         } else if (index == 10) {
             orient = "ne";
+            side = "c";
         } else if (index < 20) {
             orient = "e";
+            side = "lr";
         } else if (index == 20) {
             orient = "se";
+            side = "c";
         } else if (index < 30) {
             orient = "s";
+            side = "tb";
         } else if (index == 30) {
             orient = "sw";
+            side = "c";
         } else {
             orient = "w";
+            side = "lr";
         }
 
-        div.setAttribute("class", `square_div square_${orient}`);
+        // Create divs
+        let reldiv = document.createElement("div");
+        reldiv.setAttribute("class", `space_reldiv space_reldiv_${orient} space_reldiv_${side}`);
+
+        let div = document.createElement("div");
+        div.setAttribute("class", `space_div space_div_${orient} space_div_${side}`);
 
         if (type == 'P') {
             // Add colour block for property squares
-            let colourdiv = document.createElement("div");
-            colourdiv.setAttribute("class", "colour_block");
 
             // Work out colour
-            let colour;
+            let colour = set_to_colour(desc[0]);
 
-            switch (desc[0]) {
-                case 'A':
-                    colour = "rgb(140,87,60)";
-                    break;
-                case 'B':
-                    colour = "rgb(181,223,249)";
-                    break;
-                case 'C':
-                    colour = "rgb(200,71,147)";
-                    break;
-                case 'D':
-                    colour = "rgb(233,153,63)";
-                    break;
-                case 'E':
-                    colour = "rgb(218,56,51)";
-                    break;
-                case 'F':
-                    colour = "rgb(252,243,80)";
-                    break;
-                case 'G':
-                    colour = "rgb(85,176,99)";
-                    break;
-                case 'H':
-                    colour = "rgb(48,112,182)";
-                    break;
-            }
+            // Add the div
+            let colourdiv = document.createElement("div");
+
+            colourdiv.setAttribute("class", "colour_block");
             colourdiv.setAttribute("style", `background-color: ${colour};`);
+
             div.appendChild(colourdiv);
         }
 
-        // Create description
-        let descspan = document.createElement("p");
-        descspan.setAttribute("class", "desc");
-        descspan.innerText = desc;
-        div.appendChild(descspan);
+        // Create description paragraph
+        let descpara = document.createElement("p");
+
+        let pretty = pretty_desc(desc, type);
+
+        descpara.setAttribute("class", "desc");
+        descpara.innerText = pretty;
+
+        div.appendChild(descpara);
+
+        // Draw icon
+        let icon = type_to_icon(type);
+
+        if (icon) {
+            let iconspan = document.createElement("p");
+
+            iconspan.setAttribute("class", "icon");
+            iconspan.innerText = icon;
+
+            div.appendChild(iconspan);
+        }
 
         // Create percentage span
         let pctspan = document.createElement("p");
+
         pctspan.setAttribute("id", `pct${index}`);
+
         div.appendChild(pctspan);
 
-        // Add the div
-        elem.appendChild(div);
+        // Add the divs
+        reldiv.appendChild(div);
+        elem.appendChild(reldiv);
     }
 
+    // Set up pause/play button
     setup_pause();
 
     let pause = document.getElementById("pause");
     pause.onclick = pause_click;
     pause.style.display = "block";
+}
+
+function set_to_colour(set) {
+    switch (set) {
+        case 'A':
+            return "rgb(140,87,60)";
+        case 'B':
+            return "rgb(181,223,249)";
+        case 'C':
+            return "rgb(200,71,147)";
+        case 'D':
+            return "rgb(233,153,63)";
+        case 'E':
+            return "rgb(218,56,51)";
+        case 'F':
+            return "rgb(252,243,80)";
+        case 'G':
+            return "rgb(85,176,99)";
+        case 'H':
+            return "rgb(48,112,182)";
+    }
+}
+
+function type_to_icon(type) {
+    switch (type) {
+        case 'U':
+            return "💡";
+        case 'u':
+            return "🛁";
+        case 'R':
+            return "🚂";
+        case 'c':
+            return "?";
+        case 'C':
+            return "🏆";
+        case 'T':
+            return "💠";
+        case 't':
+            return "💍";
+        case 'J':
+            return "▥";
+        case "G":
+            return "←";//👈";
+        case 'g':
+            return "👮‍♂️";
+        case 'F':
+            return "🚗";
+    };
+}
+
+function pretty_desc(desc, type) {
+    switch (type) {
+        case 'P':
+            switch (desc) {
+                case "A1":
+                    return "Old Kent Road";
+                case "A2":
+                    return "Whitechapel Road";
+                case "B1":
+                    return "The Angel Islington";
+                case "B2":
+                    return "Euston Road";
+                case "B3":
+                    return "Pentonville Road";
+                case "C1":
+                    return "Pall Mall";
+                case "C2":
+                    return "Whitehall";
+                case "C3":
+                    return "Nothumberland Avenue";
+                case "D1":
+                    return "Bow Street";
+                case "D2":
+                    return "Marlborough Street";
+                case "D3":
+                    return "Vine Street";
+                case "E1":
+                    return "Strand";
+                case "E2":
+                    return "Fleet Street";
+                case "E3":
+                    return "Trafalgar Square";
+                case "F1":
+                    return "Leicster Square";
+                case "F2":
+                    return "Coventry Street";
+                case "F3":
+                    return "Picadilly";
+                case "G1":
+                    return "Regent Street";
+                case "G2":
+                    return "Oxford Street";
+                case "G3":
+                    return "Bond Street";
+                case "H1":
+                    return "Park Lane";
+                case "H2":
+                    return "Mayfair";
+            }
+        case 'R':
+            switch (desc) {
+                case "R1":
+                    return "Kings Cross Station";
+                case "R2":
+                    return "Marylebone Station";
+                case "R3":
+                    return "Fenchurch St. Station";
+                case "R4":
+                    return "Liverpool St. Station";
+            }
+    }
+
+    return desc
 }
 
 function process_stats(stats) {
@@ -213,13 +335,22 @@ function process_stats(stats) {
         let elem = leaderboard[i][0];
         let stat = leaderboard[i][1];
 
-        add_stat(tbody, square_desc[elem], stat, stats.moves)
+        let addelem;
+
+        if (square_type[elem] == 'P') {
+            let colour = set_to_colour(square_desc[elem][0]);
+            addelem = document.createElement("span");
+            addelem.setAttribute("class", "colsample");
+            addelem.setAttribute("style", `background-color: ${colour}`);
+        }
+
+        add_leaderboard(tbody, pretty_desc(square_desc[elem], square_type[elem]), stat, stats.moves, false, addelem)
 
         let reasons = stats.reasons[elem];
 
         if (square_type[elem] == 'J') {
             let visits = stat - reasons.reduce((a, b) => a + b, 0n);
-            add_stat(tbody, "Just Visiting", visits, stat, true)
+            add_leaderboard(tbody, "Just Visiting", visits, stat, true)
         }
 
         for (const [index, count] of reasons.entries()) {
@@ -244,12 +375,17 @@ function process_stats(stats) {
                     break
             }
 
-            add_stat(tbody, desc, count, stat, true)
+            add_leaderboard(tbody, desc, count, stat, true)
         }
+    }
+
+    if ((stats.turns % 100_000_000n) == 0) {
+        // Auto-pause at 100,000,000
+        pause_click();
     }
 }
 
-function add_stat(tbody, desc, value, total, sub) {
+function add_leaderboard(tbody, desc, value, total, sub, addelem) {
     let tr = document.createElement("tr");
 
     if (sub) {
@@ -260,7 +396,16 @@ function add_stat(tbody, desc, value, total, sub) {
 
     let td = document.createElement("td");
     td.setAttribute("class", "statlabel");
-    td.innerText = `${desc}:`;
+
+    if (addelem) {
+        td.appendChild(addelem);
+        let span = document.createElement("span");
+        span.innerText = `${desc}:`;
+        td.appendChild(span);
+    } else {
+        td.innerText = `${desc}:`;
+    }
+
     tr.appendChild(td);
 
     td = document.createElement("td");

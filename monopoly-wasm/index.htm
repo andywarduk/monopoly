@@ -7,10 +7,9 @@
 
     <style>
         @font-face {
-            font-family: "Monopoly";
+            font-family: "Kabel";
             src:
-                local("Monopoly"),
-                url("Monopoly.woff") format("woff");
+                url("Kabel_Regular.woff") format("woff");
         }
 
         /* 1. Use a more-intuitive box-sizing model */
@@ -57,8 +56,8 @@
         }
 
         .title {
-            font-size: 100px;
-            font-family: Monopoly, Arial, Helvetica, sans-serif;
+            font-size: 90px;
+            font-family: Kabel, Arial, Helvetica, sans-serif;
             color: white;
             background-color: red;
             padding-left: 25px;
@@ -67,75 +66,115 @@
             border-radius: 20px;
         }
 
-        .square {
+        /* Space table cell */
+        .space_cell {
             background-color: rgb(169, 247, 169);
             color: black;
             border: 2px solid black;
-            width: 70px;
-            min-width: 70px;
-            height: 70px;
-            min-height: 70px;
             font-size: 10px;
-            font-weight: bold;
+            /* font-weight: bold; */
             text-align: center;
             padding: 0;
         }
 
-        .square_div {
-            height: 100%;
+        /* Relative div inside table cell */
+        .space_reldiv {
+            position: relative;
+        }
+
+        .space_reldiv_tb {
+            height: 100px;
+            min-height: 100px;
+            width: 70px;
+            min-width: 70px;
+        }
+
+        .space_reldiv_lr {
+            height: 70px;
+            min-height: 70px;
+            width: 100px;
+            min-width: 100px;
+        }
+
+        .space_reldiv_c {
+            height: 100px;
+            min-height: 100px;
+            width: 100px;
+            min-width: 100px;
+        }
+
+        /* Content cell rotated in to place */
+        .space_div {
+            position: absolute;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        .square_nw {
+        .space_div_tb,
+        .space_div_lr {
+            height: 100px;
+            min-height: 100px;
+            width: 70px;
+            min-width: 70px;
+        }
+
+        .space_div_c {
+            height: 100px;
+            min-height: 100px;
+            width: 100px;
+            min-width: 100px;
+        }
+
+        .space_div_n {
+            transform: rotate(180deg);
+        }
+
+        .space_div_e {
+            transform: translate(15px, -15px) rotate(-90deg);
+        }
+
+        .space_div_w {
+            transform: translate(15px, -15px) rotate(90deg);
+        }
+
+        .space_div_nw {
             transform: rotate(135deg);
             height: 90%;
         }
 
-        .square_n {
-            transform: rotate(180deg);
-        }
-
-        .square_ne {
+        .space_div_ne {
             transform: rotate(225deg);
             height: 90%;
         }
 
-        .square_e {
-            transform: rotate(270deg);
-        }
-
-        .square_se {
+        .space_div_se {
             transform: rotate(315deg);
             height: 90%;
         }
 
-        .square_se>.desc {
-            margin-left: 10%;
-            margin-right: 10%;
+        .space_div_se>.desc {
+            margin-left: 30%;
+            margin-right: 30%;
         }
 
-        .square_s {
-            transform: rotate(0deg);
-        }
-
-        .square_sw {
+        .space_div_sw {
             transform: rotate(45deg);
             height: 90%;
         }
 
-        .square_sw>.desc {
-            margin-left: 20%;
-            margin-right: 20%;
-        }
-
-        .square_w {
-            transform: rotate(90deg);
+        .space_div_sw>.desc {
+            margin-left: 30%;
+            margin-right: 30%;
         }
 
         .colour_block {
             height: 20px;
+            border-bottom: 2px solid black;
+        }
+
+        .icon {
+            font-size: 37px;
         }
 
         .stats {
@@ -166,6 +205,13 @@
         .substat>.statlabel {
             padding-left: 20px;
         }
+
+        .colsample {
+            display: inline-block;
+            height: 10px;
+            width: 10px;
+            margin-right: 6px;
+        }
     </style>
 </head>
 
@@ -174,20 +220,20 @@
         <table class="board_tab">
             <tbody>
                 <tr>
-                    <td id="0" class="square"></td>
-                    <td id="1" class="square"></td>
-                    <td id="2" class="square"></td>
-                    <td id="3" class="square"></td>
-                    <td id="4" class="square"></td>
-                    <td id="5" class="square"></td>
-                    <td id="6" class="square"></td>
-                    <td id="7" class="square"></td>
-                    <td id="8" class="square"></td>
-                    <td id="9" class="square"></td>
-                    <td id="10" class="square"></td>
+                    <td id="0" class="space_cell space_cell_nw"></td>
+                    <td id="1" class="space_cell space_cell_n"></td>
+                    <td id="2" class="space_cell space_cell_n"></td>
+                    <td id="3" class="space_cell space_cell_n"></td>
+                    <td id="4" class="space_cell space_cell_n"></td>
+                    <td id="5" class="space_cell space_cell_n"></td>
+                    <td id="6" class="space_cell space_cell_n"></td>
+                    <td id="7" class="space_cell space_cell_n"></td>
+                    <td id="8" class="space_cell space_cell_n"></td>
+                    <td id="9" class="space_cell space_cell_n"></td>
+                    <td id="10" class="space_cell space_cell_ne"></td>
                 </tr>
                 <tr>
-                    <td id="39" class="square"></td>
+                    <td id="39" class="space_cell space_cell_w"></td>
                     <td colspan="9" rowspan="9">
                         <div class="title_div">
                             <div class="title_border">
@@ -195,53 +241,53 @@
                             </div>
                         </div>
                     </td>
-                    <td id="11" class="square"></td>
+                    <td id="11" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="38" class="square"></td>
-                    <td id="12" class="square"></td>
+                    <td id="38" class="space_cell space_cell_w"></td>
+                    <td id="12" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="37" class="square"></td>
-                    <td id="13" class="square"></td>
+                    <td id="37" class="space_cell space_cell_w"></td>
+                    <td id="13" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="36" class="square"></td>
-                    <td id="14" class="square"></td>
+                    <td id="36" class="space_cell space_cell_w"></td>
+                    <td id="14" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="35" class="square"></td>
+                    <td id="35" class="space_cell space_cell_w"></td>
                     </td>
-                    <td id="15" class="square"></td>
+                    <td id="15" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="34" class="square"></td>
-                    <td id="16" class="square"></td>
+                    <td id="34" class="space_cell space_cell_w"></td>
+                    <td id="16" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="33" class="square"></td>
-                    <td id="17" class="square"></td>
+                    <td id="33" class="space_cell space_cell_w"></td>
+                    <td id="17" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="32" class="square"></td>
-                    <td id="18" class="square"></td>
+                    <td id="32" class="space_cell space_cell_w"></td>
+                    <td id="18" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="31" class="square"></td>
-                    <td id="19" class="square"></td>
+                    <td id="31" class="space_cell space_cell_w"></td>
+                    <td id="19" class="space_cell space_cell_e"></td>
                 </tr>
                 <tr>
-                    <td id="30" class="square"></td>
-                    <td id="29" class="square"></td>
-                    <td id="28" class="square"></td>
-                    <td id="27" class="square"></td>
-                    <td id="26" class="square"></td>
-                    <td id="25" class="square"></td>
-                    <td id="24" class="square"></td>
-                    <td id="23" class="square"></td>
-                    <td id="22" class="square"></td>
-                    <td id="21" class="square"></td>
-                    <td id="20" class="square"></td>
+                    <td id="30" class="space_cell space_cell_sw"></td>
+                    <td id="29" class="space_cell space_cell_s"></td>
+                    <td id="28" class="space_cell space_cell_s"></td>
+                    <td id="27" class="space_cell space_cell_s"></td>
+                    <td id="26" class="space_cell space_cell_s"></td>
+                    <td id="25" class="space_cell space_cell_s"></td>
+                    <td id="24" class="space_cell space_cell_s"></td>
+                    <td id="23" class="space_cell space_cell_s"></td>
+                    <td id="22" class="space_cell space_cell_s"></td>
+                    <td id="21" class="space_cell space_cell_s"></td>
+                    <td id="20" class="space_cell space_cell_se"></td>
                 </tr>
             </tbody>
         </table>

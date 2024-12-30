@@ -34,7 +34,7 @@ impl WasmBoard {
                 monopoly_lib::Space::Property(set, n) => {
                     format!("{}{}", (*set + b'A') as char, n + 1)
                 }
-                monopoly_lib::Space::Rail(n) => format!("Rail {}", n + 1),
+                monopoly_lib::Space::Rail(n) => format!("R{}", n + 1),
                 monopoly_lib::Space::Utility(n) => match n {
                     0 => "Electric Company".to_string(),
                     1 => "Water Works".to_string(),
@@ -62,10 +62,18 @@ impl WasmBoard {
                 monopoly_lib::Space::GoToJail => 'g',
                 monopoly_lib::Space::Property(_, _) => 'P',
                 monopoly_lib::Space::Rail(_) => 'R',
-                monopoly_lib::Space::Utility(_) => 'U',
+                monopoly_lib::Space::Utility(n) => match n {
+                    0 => 'U',
+                    1 => 'u',
+                    _ => panic!("unrecognised utility"),
+                },
                 monopoly_lib::Space::CommunityChest(_) => 'C',
                 monopoly_lib::Space::Chance(_) => 'c',
-                monopoly_lib::Space::Tax(_) => 'T',
+                monopoly_lib::Space::Tax(n) => match n {
+                    0 => 'T',
+                    1 => 't',
+                    _ => panic!("unrecognised tax"),
+                },
             })
             .map(|c| c.to_string())
             .collect()
