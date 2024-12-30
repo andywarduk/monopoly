@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Monopoly Probabilities</title>
+
+    <style>
+        @font-face {
+            font-family: "Monopoly";
+            src:
+                local("Monopoly"),
+                url("Monopoly.woff") format("woff");
+        }
+
+        /* 1. Use a more-intuitive box-sizing model */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        /* 2. Remove default margin */
+        * {
+            margin: 0;
+        }
+
+        body {
+            /* 3. Add accessible line-height */
+            line-height: 1.5;
+            /* 4. Improve text rendering */
+            -webkit-font-smoothing: antialiased;
+            /* Default font */
+            font-family: Arial, Helvetica, sans-serif;
+            display: flex;
+        }
+
+        .board_div {
+            margin: 20px;
+        }
+
+        .board_tab {
+            border-collapse: collapse;
+        }
+
+        .title_div {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+        }
+
+        .title_border {
+            padding: 10px;
+            background-color: red;
+            transform: rotate(-45deg);
+            border-radius: 30px;
+        }
+
+        .title {
+            font-size: 100px;
+            font-family: Monopoly, Arial, Helvetica, sans-serif;
+            color: white;
+            background-color: red;
+            padding-left: 25px;
+            padding-right: 25px;
+            border: 2px solid white;
+            border-radius: 20px;
+        }
+
+        .square {
+            background-color: rgb(169, 247, 169);
+            color: black;
+            border: 2px solid black;
+            width: 70px;
+            min-width: 70px;
+            height: 70px;
+            min-height: 70px;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+            padding: 0;
+        }
+
+        .square_div {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .square_nw {
+            transform: rotate(135deg);
+            height: 90%;
+        }
+
+        .square_n {
+            transform: rotate(180deg);
+        }
+
+        .square_ne {
+            transform: rotate(225deg);
+            height: 90%;
+        }
+
+        .square_e {
+            transform: rotate(270deg);
+        }
+
+        .square_se {
+            transform: rotate(315deg);
+            height: 90%;
+        }
+
+        .square_se>.desc {
+            margin-left: 10%;
+            margin-right: 10%;
+        }
+
+        .square_s {
+            transform: rotate(0deg);
+        }
+
+        .square_sw {
+            transform: rotate(45deg);
+            height: 90%;
+        }
+
+        .square_sw>.desc {
+            margin-left: 20%;
+            margin-right: 20%;
+        }
+
+        .square_w {
+            transform: rotate(90deg);
+        }
+
+        .colour_block {
+            height: 20px;
+        }
+
+        .stats {
+            margin-top: 20px;
+        }
+
+        .stat {
+            text-align: right;
+            padding-left: 20px;
+            min-width: 120px;
+        }
+
+        .statpct {
+            text-align: right;
+            padding-left: 20px;
+            min-width: 100px;
+        }
+
+        .substat {
+            font-size: 80%;
+            color: rgb(40, 40, 40);
+        }
+
+        .statlabel {
+            min-width: 200px;
+        }
+
+        .substat>.statlabel {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="board_div">
+        <table class="board_tab">
+            <tbody>
+                <tr>
+                    <td id="0" class="square"></td>
+                    <td id="1" class="square"></td>
+                    <td id="2" class="square"></td>
+                    <td id="3" class="square"></td>
+                    <td id="4" class="square"></td>
+                    <td id="5" class="square"></td>
+                    <td id="6" class="square"></td>
+                    <td id="7" class="square"></td>
+                    <td id="8" class="square"></td>
+                    <td id="9" class="square"></td>
+                    <td id="10" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="39" class="square"></td>
+                    <td colspan="9" rowspan="9">
+                        <div class="title_div">
+                            <div class="title_border">
+                                <h1 class="title">MONOPOLY</h1>
+                            </div>
+                        </div>
+                    </td>
+                    <td id="11" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="38" class="square"></td>
+                    <td id="12" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="37" class="square"></td>
+                    <td id="13" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="36" class="square"></td>
+                    <td id="14" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="35" class="square"></td>
+                    </td>
+                    <td id="15" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="34" class="square"></td>
+                    <td id="16" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="33" class="square"></td>
+                    <td id="17" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="32" class="square"></td>
+                    <td id="18" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="31" class="square"></td>
+                    <td id="19" class="square"></td>
+                </tr>
+                <tr>
+                    <td id="30" class="square"></td>
+                    <td id="29" class="square"></td>
+                    <td id="28" class="square"></td>
+                    <td id="27" class="square"></td>
+                    <td id="26" class="square"></td>
+                    <td id="25" class="square"></td>
+                    <td id="24" class="square"></td>
+                    <td id="23" class="square"></td>
+                    <td id="22" class="square"></td>
+                    <td id="21" class="square"></td>
+                    <td id="20" class="square"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br />
+
+        <button id="pause" style="display: none"></button>
+    </div>
+    <div class="stats">
+        <h3>Game statistics:</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="statlabel">Turns:</td>
+                    <td id="stat_turns" class="stat"></td>
+                </tr>
+                <tr>
+                    <td class="statlabel">Moves:</td>
+                    <td id="stat_moves" class="stat"></td>
+                </tr>
+                <tr>
+                    <td class="statlabel">Throws:</td>
+                    <td id="stat_throws" class="stat"></td>
+                </tr>
+                <tr>
+                    <td class="statlabel">Doubles:</td>
+                    <td id="stat_doubles" class="stat"></td>
+                    <td id="stat_doubles_pct" class="statpct"></td>
+                </tr>
+                <tr>
+                    <td class="statlabel">Double doubles:</td>
+                    <td id="stat_ddoubles" class="stat"></td>
+                    <td id="stat_ddoubles_pct" class="statpct"></td>
+                </tr>
+                <tr>
+                    <td class="statlabel">Triple doubles:</td>
+                    <td id="stat_tdoubles" class="stat"></td>
+                    <td id="stat_tdoubles_pct" class="statpct"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br />
+
+        <h3>Leaderboard:</h3>
+        <div id="leaderboard"></div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>
