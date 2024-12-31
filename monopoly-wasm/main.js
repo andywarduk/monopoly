@@ -317,8 +317,8 @@ function process_stats(stats) {
     //                2 rolls            3 rolls                   3 rolls (goes to jail on 3rd roll)
     let doubles_tot = stats.doubles[0] + (2n * stats.doubles[1]) + (3n * stats.doubles[2]);
 
-    let double_turns = stats.doubles[0]
-    let triple_turns = stats.doubles[1] + stats.doubles[2]
+    let double_turns = stats.doubles[0];
+    let triple_turns = stats.doubles[1] + stats.doubles[2];
     let single_turns = stats.turns - (double_turns + triple_turns);
 
     update_stat("stat_turns", stats.turns);

@@ -343,7 +343,7 @@ impl std::fmt::Display for MoveReason {
         match self {
             MoveReason::Roll => f.write_str("Rolled"),
             MoveReason::CHCard => f.write_str("Chance"),
-            MoveReason::CCCard => f.write_str("Comm Chest"),
+            MoveReason::CCCard => f.write_str("Community Chest"),
             MoveReason::GoToJail => f.write_str("Go to Jail"),
             MoveReason::TripleDouble => f.write_str("Triple Double"),
         }
