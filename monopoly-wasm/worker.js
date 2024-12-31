@@ -49,7 +49,6 @@ function get_stats() {
     return {
         turns: rstats.turns,
         moves: rstats.moves,
-        throws: rstats.throws,
         doubles: [doubles[0], doubles[1], doubles[2]],
         arrivals: arrivals,
         reasons: reasons,

@@ -10,7 +10,6 @@ pub struct WasmBoard {
 pub struct WasmStats {
     pub turns: u64,
     pub moves: u64,
-    pub throws: u64,
 }
 
 #[wasm_bindgen]
@@ -83,7 +82,6 @@ impl WasmBoard {
         WasmStats {
             turns: self.board.turns(),
             moves: self.board.moves(),
-            throws: self.board.throws(),
         }
     }
 

@@ -290,9 +290,6 @@ function process_stats(stats) {
     elem = document.getElementById("stat_moves");
     elem.innerText = stats.moves.toLocaleString();
 
-    elem = document.getElementById("stat_throws");
-    elem.innerText = stats.throws.toLocaleString();
-
     elem = document.getElementById("stat_doubles");
     elem.innerText = stats.doubles[0].toLocaleString();
 

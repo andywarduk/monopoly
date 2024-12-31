@@ -17,7 +17,6 @@ pub struct Board {
     arrival_reason: [[u64; REASONS]; SPACES],
     moves: u64,
     turns: u64,
-    throws: u64,
     doubles: [u64; 3],
     rng: ThreadRng,
 }
@@ -107,7 +106,6 @@ impl Default for Board {
             arrival_reason: [[0; REASONS]; SPACES],
             moves: 0,
             turns: 0,
-            throws: 0,
             doubles: [0; 3],
             rng,
         }
@@ -121,25 +119,37 @@ impl Board {
         let mut doubles = 0;
 
         loop {
+            // Roll the dice
             let d1 = self.dice_roll();
             let d2 = self.dice_roll();
+
+            // Calculate total
             let total = d1 + d2;
-            self.throws += 1;
 
-            self.move_to((self.position + total as usize) % SPACES, MoveReason::Roll);
+            // Thrown a double?
+            let double = d1 == d2;
 
-            if d1 != d2 {
-                break;
+            if double {
+                // Count doubles
+                doubles += 1;
+
+                if doubles == 3 {
+                    // 2 doubles in a row - go to jail
+                    self.move_to(self.find_space(Space::Jail), MoveReason::TripleDouble);
+                    break;
+                }
             }
 
-            doubles += 1;
+            // Make the move
+            self.move_to((self.position + total as usize) % SPACES, MoveReason::Roll);
 
-            if doubles == 3 {
-                self.move_to(self.find_space(Space::Jail), MoveReason::TripleDouble);
+            // If not rolled a double then go is over
+            if !double {
                 break;
             }
         }
 
+        // Count doubles (not cumulative)
         if doubles > 0 {
             self.doubles[doubles - 1] += 1;
         }
@@ -175,10 +185,6 @@ impl Board {
 
     pub fn turns(&self) -> u64 {
         self.turns
-    }
-
-    pub fn throws(&self) -> u64 {
-        self.throws
     }
 
     pub fn doubles(&self) -> &[u64] {

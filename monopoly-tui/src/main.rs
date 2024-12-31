@@ -242,11 +242,10 @@ where
 
     draw_stat(w, 0, "Turns", board.turns())?;
     draw_stat(w, 1, "Moves", board.moves())?;
-    draw_stat(w, 2, "Throws", board.throws())?;
-    draw_stat_pct(w, 3, "Doubles", board.doubles_elem(0), board.turns(), 1)?;
+    draw_stat_pct(w, 2, "Doubles", board.doubles_elem(0), board.turns(), 1)?;
     draw_stat_pct(
         w,
-        4,
+        3,
         "Double doubles",
         board.doubles_elem(1),
         board.turns(),
@@ -254,7 +253,7 @@ where
     )?;
     draw_stat_pct(
         w,
-        5,
+        4,
         "Triple doubles",
         board.doubles_elem(2),
         board.turns(),
@@ -270,7 +269,7 @@ where
 
     sorted.sort();
 
-    let mut y = 7;
+    let mut y = 6;
     for (a, elem) in sorted.into_iter().rev().take(10) {
         let desc = space_desc(board, elem);
         draw_stat_pct(w, y, desc.as_str(), *a, board.moves(), 2)?;
