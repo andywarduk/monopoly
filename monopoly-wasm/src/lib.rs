@@ -1,4 +1,4 @@
-use monopoly_lib::Board;
+use monopoly_lib::{Board, Space};
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -26,22 +26,22 @@ impl WasmBoard {
             .spaces()
             .iter()
             .map(|s| match s {
-                monopoly_lib::Space::Go => "Go".to_string(),
-                monopoly_lib::Space::Jail => "Jail".to_string(),
-                monopoly_lib::Space::FreeParking => "Free Parking".to_string(),
-                monopoly_lib::Space::GoToJail => "Go to Jail".to_string(),
-                monopoly_lib::Space::Property(set, n) => {
+                Space::Go => "Go".to_string(),
+                Space::Jail => "Jail".to_string(),
+                Space::FreeParking => "Free Parking".to_string(),
+                Space::GoToJail => "Go to Jail".to_string(),
+                Space::Property(set, n) => {
                     format!("{}{}", (*set + b'A') as char, n + 1)
                 }
-                monopoly_lib::Space::Rail(n) => format!("R{}", n + 1),
-                monopoly_lib::Space::Utility(n) => match n {
+                Space::Rail(n) => format!("R{}", n + 1),
+                Space::Utility(n) => match n {
                     0 => "Electric Company".to_string(),
                     1 => "Water Works".to_string(),
                     _ => panic!("Unexpected utility"),
                 },
-                monopoly_lib::Space::CommunityChest(_) => "Community Chest".to_string(),
-                monopoly_lib::Space::Chance(_) => "Chance".to_string(),
-                monopoly_lib::Space::Tax(n) => match n {
+                Space::CommunityChest(_) => "Community Chest".to_string(),
+                Space::Chance(_) => "Chance".to_string(),
+                Space::Tax(n) => match n {
                     0 => "Income Tax".to_string(),
                     1 => "Luxury Tax".to_string(),
                     _ => panic!("Unexpected tax"),
@@ -55,20 +55,20 @@ impl WasmBoard {
             .spaces()
             .iter()
             .map(|s| match s {
-                monopoly_lib::Space::Go => 'G',
-                monopoly_lib::Space::Jail => 'J',
-                monopoly_lib::Space::FreeParking => 'F',
-                monopoly_lib::Space::GoToJail => 'g',
-                monopoly_lib::Space::Property(_, _) => 'P',
-                monopoly_lib::Space::Rail(_) => 'R',
-                monopoly_lib::Space::Utility(n) => match n {
+                Space::Go => 'G',
+                Space::Jail => 'J',
+                Space::FreeParking => 'F',
+                Space::GoToJail => 'g',
+                Space::Property(_, _) => 'P',
+                Space::Rail(_) => 'R',
+                Space::Utility(n) => match n {
                     0 => 'U',
                     1 => 'u',
                     _ => panic!("unrecognised utility"),
                 },
-                monopoly_lib::Space::CommunityChest(_) => 'C',
-                monopoly_lib::Space::Chance(_) => 'c',
-                monopoly_lib::Space::Tax(n) => match n {
+                Space::CommunityChest(_) => 'C',
+                Space::Chance(_) => 'c',
+                Space::Tax(n) => match n {
                     0 => 'T',
                     1 => 't',
                     _ => panic!("unrecognised tax"),
@@ -100,7 +100,6 @@ impl WasmBoard {
 
 #[wasm_bindgen]
 pub fn create_board() -> WasmBoard {
-    //    alert("in create");
     WasmBoard {
         board: Board::default(),
     }
