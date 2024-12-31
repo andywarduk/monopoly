@@ -216,7 +216,7 @@ table {
 .stat {
     font-family: Arial, Helvetica, sans-serif;
     text-align: right;
-    padding-left: 20px;
+    padding-left: 10px;
     min-width: 120px;
 }
 
@@ -224,7 +224,7 @@ table {
 .statpct {
     font-family: Arial, Helvetica, sans-serif;
     text-align: right;
-    padding-left: 20px;
+    padding-left: 10px;
     min-width: 100px;
 }
 
@@ -237,7 +237,7 @@ table {
 
 /* Statistic percentage */
 .statlabel {
-    min-width: 200px;
+    min-width: 210px;
 }
 
 /* Arrival reason statistic description */

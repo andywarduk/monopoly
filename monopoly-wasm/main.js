@@ -433,7 +433,7 @@ function process_stats(stats) {
         }
     }
 
-    if ((stats.turns % 100_000_000n) == 0) {
+    if (((stats.turns + BigInt(iterations)) % 100_000_000n) == 0) {
         // Auto-pause at 100,000,000
         pause_click();
     }
