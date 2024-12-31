@@ -1,0 +1,284 @@
+/* Monopoly font face */
+@font-face {
+    font-family: "Kabel";
+    src:
+        url("Kabel_Regular.woff") format("woff");
+}
+
+/* Use a more-intuitive box-sizing model */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Remove default margin */
+* {
+    margin: 0;
+}
+
+body {
+    /* Add accessible line-height */
+    line-height: 1.5;
+    /* Improve text rendering */
+    -webkit-font-smoothing: antialiased;
+    /* Default font */
+    font-family: 'Kabel', Arial, Helvetica, sans-serif;
+    /* Set up flexbox in the body */
+    display: flex;
+}
+
+table {
+    /* Collapse table borders by default */
+    border-collapse: collapse;
+}
+
+/* Bpard styles */
+.board_div {
+    margin: 20px;
+}
+
+/* Title styles */
+.title_div {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.title_border {
+    padding: 10px;
+    background-color: red;
+    transform: rotate(-45deg);
+    border-radius: 30px;
+}
+
+.title {
+    font-size: 90px;
+    color: white;
+    padding-left: 25px;
+    padding-right: 25px;
+    border: 2px solid white;
+    border-radius: 20px;
+}
+
+/* Space table cell */
+.space_cell {
+    background-color: rgb(169, 247, 169);
+    color: black;
+    border: 2px solid black;
+    font-size: 10px;
+    /* font-weight: bold; */
+    text-align: center;
+    padding: 0;
+}
+
+/* Relative div inside table cell */
+.space_reldiv {
+    position: relative;
+}
+
+/* Top and bottom are 100 high and 70 wide */
+.space_reldiv_tb {
+    height: 100px;
+    min-height: 100px;
+    width: 70px;
+    min-width: 70px;
+}
+
+/* Left and right are 70 high and 100 wide */
+.space_reldiv_lr {
+    height: 70px;
+    min-height: 70px;
+    width: 100px;
+    min-width: 100px;
+}
+
+/* Corners are 100 high and 100 wide */
+.space_reldiv_c {
+    height: 100px;
+    min-height: 100px;
+    width: 100px;
+    min-width: 100px;
+}
+
+/* Content cell rotated in to place - columner flex box*/
+.space_div {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Edges are 100 high and 70 wide */
+.space_div_tb,
+.space_div_lr {
+    height: 100px;
+    min-height: 100px;
+    width: 70px;
+    min-width: 70px;
+}
+
+/* Corners are 100 high and 100 wide */
+.space_div_c {
+    height: 100px;
+    min-height: 100px;
+    width: 100px;
+    min-width: 100px;
+}
+
+/* North edges rotated 180 degrees */
+.space_div_n {
+    transform: rotate(180deg);
+}
+
+/* East edges rotated -90 degrees */
+.space_div_e {
+    transform: translate(15px, -15px) rotate(-90deg);
+}
+
+/* West edges rotated 90 degrees */
+.space_div_w {
+    transform: translate(15px, -15px) rotate(90deg);
+}
+
+/* North west corner rotated 135 degrees */
+.space_div_nw {
+    transform: rotate(135deg);
+    height: 90%;
+}
+
+/* North east corner rotated 225 degrees */
+.space_div_ne {
+    transform: rotate(225deg);
+    height: 90%;
+}
+
+/* South east corner rotated 315 degrees */
+.space_div_se {
+    transform: rotate(315deg);
+    height: 90%;
+}
+
+/* South west corner rotated 45 degrees */
+.space_div_sw {
+    transform: rotate(45deg);
+    height: 90%;
+}
+
+/* Make property name wrap nicely in SE corner */
+.space_div_se>.propname {
+    margin-left: 30%;
+    margin-right: 30%;
+}
+
+/* Make property name wrap nicely in SW corner */
+.space_div_sw>.propname {
+    margin-left: 30%;
+    margin-right: 30%;
+}
+
+/* Property colour block */
+.colour_block {
+    height: 20px;
+    border-bottom: 2px solid black;
+}
+
+/* Property name */
+.propname {
+    padding-left: 2px;
+    padding-right: 2px;
+    hyphens: manual;
+}
+
+/* Property icon */
+.icon {
+    font-size: 40px;
+    line-height: 1;
+}
+
+/* Property arrival percentage */
+.pct_span {
+    margin-bottom: 2px;
+    border-radius: 5px;
+    padding-left: 4px;
+    padding-right: 4px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* Statistics block */
+.stats {
+    margin-top: 20px;
+}
+
+/* Statistic value */
+.stat {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: right;
+    padding-left: 20px;
+    min-width: 120px;
+}
+
+/* Statistic percentage */
+.statpct {
+    font-family: Arial, Helvetica, sans-serif;
+    text-align: right;
+    padding-left: 20px;
+    min-width: 100px;
+}
+
+/* Arrival reason leaderboard entry */
+.substat {
+    font-size: 80%;
+    line-height: 1.2;
+    color: rgb(80, 80, 80);
+}
+
+/* Statistic percentage */
+.statlabel {
+    min-width: 200px;
+}
+
+/* Arrival reason statistic description */
+.substat>.statlabel {
+    padding-left: 20px;
+}
+
+/* Leaderboard property colour sample */
+.colsample {
+    display: inline-block;
+    height: 10px;
+    width: 10px;
+    margin-left: 4px;
+    margin-right: 2px;
+}
+
+/* button bar */
+.buttons button {
+    width: 200px;
+    background-color: lightgreen;
+    border: 1px solid black;
+    color: black;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 10px;
+    cursor: pointer;
+    float: left;
+}
+
+.buttons button:not(:last-child) {
+    margin-right: 10px;
+}
+
+/* Clear floats (clearfix hack) */
+.buttons:after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+.buttons button:hover {
+    background-color: darkgreen;
+    color: white;
+}

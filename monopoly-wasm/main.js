@@ -1,9 +1,12 @@
 let debug = false;
 let paused = false;
+let split_just_visiting = true;
+let full_leaderboard = false;
 const iterations = 1000;
 let worker;
 let square_desc;
 let square_type;
+let last_stats;
 
 setup();
 
@@ -41,13 +44,14 @@ function process_message(msg) {
                 console.debug("Got 'execfin' from worker:", msg.data);
             }
 
-            // Process the stats
-            process_stats(msg.data.stats);
-
             if (!paused) {
-                // Execute next
+                // Execute next chunk
                 worker.postMessage({ msgtype: "execute", ticks: iterations });
             }
+
+            // Process the stats
+            last_stats = msg.data.stats;
+            process_stats(last_stats);
 
             break;
 
@@ -127,8 +131,8 @@ function process_ready(data) {
 
         let pretty = pretty_desc(desc, type);
 
-        descpara.setAttribute("class", "desc");
-        descpara.innerText = pretty;
+        descpara.setAttribute("class", "propname");
+        descpara.innerHTML = pretty;
 
         div.appendChild(descpara);
 
@@ -139,7 +143,7 @@ function process_ready(data) {
             let iconspan = document.createElement("p");
 
             iconspan.setAttribute("class", "icon");
-            iconspan.innerText = icon;
+            iconspan.innerHTML = icon;
 
             div.appendChild(iconspan);
         }
@@ -151,20 +155,45 @@ function process_ready(data) {
 
         div.appendChild(pctspan);
 
+        if (type == 'J') {
+            for (let i = 1; i <= 2; i++) {
+                let pctspan = document.createElement("p");
+
+                pctspan.setAttribute("id", `pct${index}-${i}`);
+
+                div.appendChild(pctspan);
+            }
+        }
+
         // Add the divs
         reldiv.appendChild(div);
         elem.appendChild(reldiv);
     }
 
     // Set up pause/play button
-    setup_pause();
+    update_pause_button();
 
     let pause = document.getElementById("pause");
     pause.onclick = pause_click;
     pause.style.display = "block";
+
+    // Set up split jail stats button
+    update_jailstats_button();
+
+    let jailstats = document.getElementById("splitjail");
+    jailstats.onclick = jailstats_click;
+    jailstats.style.display = "block";
+
+    // Set up full leaderboard button
+    update_fullboard_button();
+
+    let fullboard = document.getElementById("fullboard");
+    fullboard.onclick = fullboard_click;
+    fullboard.style.display = "block";
 }
 
 function set_to_colour(set) {
+    // Convert property set letter to colour
     switch (set) {
         case 'A':
             return "rgb(140,87,60)";
@@ -186,6 +215,7 @@ function set_to_colour(set) {
 }
 
 function type_to_icon(type) {
+    // Convert space type to icon
     switch (type) {
         case 'U':
             return "💡";
@@ -194,7 +224,7 @@ function type_to_icon(type) {
         case 'R':
             return "🚂";
         case 'c':
-            return "?";
+            return "<span style='font-size: 50px'>?</span>";
         case 'C':
             return "🏆";
         case 'T':
@@ -202,9 +232,9 @@ function type_to_icon(type) {
         case 't':
             return "💍";
         case 'J':
-            return "▥";
+            return "<span style='font-size: 50px'>▥</span>";
         case "G":
-            return "←";//👈";
+            return "<span style='font-size: 50px'>←</span>"
         case 'g':
             return "👮‍♂️";
         case 'F':
@@ -213,6 +243,7 @@ function type_to_icon(type) {
 }
 
 function pretty_desc(desc, type) {
+    // Return description of property according to UK Monopoly version
     switch (type) {
         case 'P':
             switch (desc) {
@@ -231,7 +262,7 @@ function pretty_desc(desc, type) {
                 case "C2":
                     return "Whitehall";
                 case "C3":
-                    return "Nothumberland Avenue";
+                    return "Nothumber&shy;land Avenue";
                 case "D1":
                     return "Bow Street";
                 case "D2":
@@ -282,58 +313,83 @@ function process_stats(stats) {
         console.debug("Processing stats:", stats);
     }
 
-    let elem;
+    // Update game statistics
+    //                2 rolls            3 rolls                   3 rolls (goes to jail on 3rd roll)
+    let doubles_tot = stats.doubles[0] + (2n * stats.doubles[1]) + (3n * stats.doubles[2]);
 
-    elem = document.getElementById("stat_turns");
-    elem.innerText = stats.turns.toLocaleString();
+    let double_turns = stats.doubles[0]
+    let triple_turns = stats.doubles[1] + stats.doubles[2]
+    let single_turns = stats.turns - (double_turns + triple_turns);
 
-    elem = document.getElementById("stat_moves");
-    elem.innerText = stats.moves.toLocaleString();
+    update_stat("stat_turns", stats.turns);
 
-    elem = document.getElementById("stat_doubles");
-    elem.innerText = stats.doubles[0].toLocaleString();
+    update_stat("stat_turns_single", single_turns, stats.turns);
+    update_stat("stat_turns_double", double_turns, stats.turns);
+    update_stat("stat_turns_triple", triple_turns, stats.turns);
+    update_stat("stat_ddoubles", stats.doubles[1], stats.turns);
+    update_stat("stat_tdoubles", stats.doubles[2], stats.turns);
 
-    elem = document.getElementById("stat_doubles_pct");
-    elem.innerText = percent(stats.doubles[0], stats.turns);
+    update_stat("stat_moves", stats.moves);
 
-    elem = document.getElementById("stat_ddoubles");
-    elem.innerText = stats.doubles[1].toLocaleString();
+    update_stat("stat_doubles_tot", doubles_tot, stats.moves);
 
-    elem = document.getElementById("stat_ddoubles_pct");
-    elem.innerText = percent(stats.doubles[1], stats.turns);
-
-    elem = document.getElementById("stat_tdoubles");
-    elem.innerText = stats.doubles[2].toLocaleString();
-
-    elem = document.getElementById("stat_tdoubles_pct");
-    elem.innerText = percent(stats.doubles[2], stats.turns);
-
+    // Calculate leaderboard
     let leaderboard = [];
 
     for (const [index, arrivals] of stats.arrivals.entries()) {
-        let elem = document.getElementById(`pct${index}`);
-        elem.innerText = percent(arrivals, stats.moves);
+        if (split_just_visiting && square_type[index] == 'J') {
+            let reasons = stats.reasons[index];
 
-        leaderboard.push([index, arrivals]);
+            let jail = reasons.reduce((a, b) => a + b, 0n);
+            let visits = arrivals - jail;
+
+            leaderboard.push([index, visits, 2]);
+            leaderboard.push([index, jail, 1]);
+        } else {
+            leaderboard.push([index, arrivals, 0]);
+        }
     };
 
-    leaderboard.sort(([_ia, aa], [_ib, ab]) => Number(ab - aa));
+    leaderboard.sort(([_ia, aa, _sa], [_ib, ab, _sb]) => Number(ab - aa));
 
+    // Draw percentages on board squares
+    let split = 180 / leaderboard.length;
+
+    for (const [rank, [index, arrivals, sub]] of leaderboard.entries()) {
+        let id;
+
+        if (sub == 0) {
+            id = `pct${index}`;
+        } else {
+            id = `pct${index}-${sub}`;
+        }
+
+        let elem = document.getElementById(id);
+        let colour = `hsl(${rank * split}, 100%, 60%)`;
+
+        elem.innerHTML = `<span class="pct_span" style="background-color: ${colour}">${percent(arrivals, stats.moves)}</span>`;
+    };
+
+    // Clear the leaderboard
     let container = document.getElementById("leaderboard");
     container.innerHTML = "";
 
+    // Create new leaderboard table
     let table = document.createElement("table");
     container.appendChild(table);
 
     let tbody = document.createElement("tbody");
     table.appendChild(tbody);
 
-    for (let i = 0; i < 10; i++) {
+    // Get top 15 or full
+    for (let i = 0; i < (full_leaderboard ? leaderboard.length : 15); i++) {
         let elem = leaderboard[i][0];
         let stat = leaderboard[i][1];
+        let sub = leaderboard[i][2];
 
         let addelem;
 
+        // Create colour swatch for properties
         if (square_type[elem] == 'P') {
             let colour = set_to_colour(square_desc[elem][0]);
             addelem = document.createElement("span");
@@ -341,38 +397,39 @@ function process_stats(stats) {
             addelem.setAttribute("style", `background-color: ${colour}`);
         }
 
-        add_leaderboard(tbody, pretty_desc(square_desc[elem], square_type[elem]), stat, stats.moves, false, addelem)
+        let desc;
 
+        if (sub == 2) {
+            desc = "Just Visiting";
+        } else {
+            desc = pretty_desc(square_desc[elem], square_type[elem]);
+        }
+
+        // Add leaderboard main entry
+        add_leaderboard(tbody, desc, stat, stats.moves, false, addelem)
+
+        if (sub == 2) {
+            // Skip reasons for just visiting
+            continue;
+        }
+
+        // Get arrival reasons
         let reasons = stats.reasons[elem];
 
-        if (square_type[elem] == 'J') {
+        // Special handling for Just Visiting for Jail space
+        if (!split_just_visiting && square_type[elem] == 'J') {
             let visits = stat - reasons.reduce((a, b) => a + b, 0n);
             add_leaderboard(tbody, "Just Visiting", visits, stat, true)
         }
 
+        // Add arrival reasons
         for (const [index, count] of reasons.entries()) {
             if (count == 0) {
+                // Skip zeroes
                 continue;
             }
 
-            let desc;
-
-            switch (index) {
-                case 0:
-                    desc = "Chance Card";
-                    break
-                case 1:
-                    desc = "Community Chest Card";
-                    break
-                case 2:
-                    desc = "Go to Jail";
-                    break
-                case 3:
-                    desc = "Triple Double";
-                    break
-            }
-
-            add_leaderboard(tbody, desc, count, stat, true)
+            add_leaderboard(tbody, arrival_reason_desc(index), count, stat, true)
         }
     }
 
@@ -382,64 +439,172 @@ function process_stats(stats) {
     }
 }
 
+function update_stat(id, value, total) {
+    let elem = document.getElementById(id);
+    elem.innerText = value.toLocaleString();
+
+    if (total) {
+        elem = document.getElementById(`${id}_pct`);
+        elem.innerText = percent(value, total);
+    }
+}
+
 function add_leaderboard(tbody, desc, value, total, sub, addelem) {
+    // Create table row
     let tr = document.createElement("tr");
 
     if (sub) {
+        // Sub stat - add class
         tr.setAttribute("class", "substat");
     }
 
     tbody.appendChild(tr);
 
+    // Create description cell
     let td = document.createElement("td");
     td.setAttribute("class", "statlabel");
 
     if (addelem) {
-        td.appendChild(addelem);
+        // Add text
         let span = document.createElement("span");
-        span.innerText = `${desc}:`;
+        span.innerHTML = `${desc}`;
+        td.appendChild(span);
+
+        // Add additional element
+        td.appendChild(addelem);
+
+        // Add colon
+        span = document.createElement("span");
+        span.innerHTML = ":";
         td.appendChild(span);
     } else {
-        td.innerText = `${desc}:`;
+        // Add text with colon
+        td.innerHTML = `${desc}:`;
     }
 
     tr.appendChild(td);
 
+    // Create number cell
     td = document.createElement("td");
+
     td.setAttribute("class", "stat");
     td.innerText = value.toLocaleString();
+
     tr.appendChild(td);
 
+    // Create percentage cell
     td = document.createElement("td");
+
     td.setAttribute("class", "statpct");
-    td.innerText = percent(value, total);
+    td.innerText = percent(value, total, 3);
+
     tr.appendChild(td);
 }
 
-function percent(value, total) {
-    if (total == 0) {
-        return 0;
+function arrival_reason_desc(index) {
+    // Convert arrival reason to string
+    switch (index) {
+        case 0:
+            return "Chance Card";
+        case 1:
+            return "Community Chest Card";
+        case 2:
+            return "Go to Jail";
+        case 3:
+            return "Triple Double";
     }
 
-    return (Number(value) / Number(total)).toLocaleString(undefined, { style: "percent", "minimumFractionDigits": 2, "maximumFractionDigits": 2 });
+    return "<Unknown>";
+}
+
+function percent(value, total, dp) {
+    // Return locale specific percentage
+    let percentage;
+
+    if (total == 0) {
+        percentage = 0;
+    } else {
+        percentage = Number(value) / Number(total);
+    }
+
+    dp = dp || 2;
+
+    return percentage.toLocaleString(undefined, { style: "percent", "minimumFractionDigits": dp, "maximumFractionDigits": dp });
 }
 
 function pause_click() {
+    // Pause/play button click handler
     paused = !paused;
 
-    setup_pause();
+    update_pause_button();
 
     if (!paused) {
         worker.postMessage({ msgtype: "execute", ticks: iterations });
     }
 }
 
-function setup_pause() {
+function update_pause_button() {
+    // Update pause/play button
     let pause = document.getElementById("pause");
 
     if (!paused) {
         pause.innerText = "⏸︎ Pause";
     } else {
         pause.innerText = "▶ Play";
+    }
+}
+
+function jailstats_click() {
+    // Jail stats button click handler
+    split_just_visiting = !split_just_visiting;
+
+    update_jailstats_button();
+}
+
+function update_jailstats_button() {
+    // Update jail stats button
+    let btn = document.getElementById("splitjail");
+
+    let index = square_type.findIndex((e) => e == 'J');
+
+    if (split_just_visiting) {
+        btn.innerText = "Combine Just Visiting";
+    } else {
+        btn.innerText = "Split Just Visiting";
+    }
+
+    let elem;
+
+    elem = document.getElementById(`pct${index}`);
+    elem.style.display = (split_just_visiting ? "none" : "block");
+    elem = document.getElementById(`pct${index}-1`);
+    elem.style.display = (split_just_visiting ? "block" : "none");
+    elem = document.getElementById(`pct${index}-2`);
+    elem.style.display = (split_just_visiting ? "block" : "none");
+
+    if (last_stats) {
+        process_stats(last_stats);
+    }
+}
+
+function fullboard_click() {
+    // Full leaderboard button click handler
+    full_leaderboard = !full_leaderboard;
+
+    update_fullboard_button();
+}
+
+function update_fullboard_button() {
+    // Update full leaderboard button
+    let btn = document.getElementById("fullboard");
+
+    if (full_leaderboard) {
+        btn.innerText = "Top 15 Only";
+    } else {
+        btn.innerText = "Full Leaderboard";
+    }
+
+    if (last_stats) {
+        process_stats(last_stats);
     }
 }
