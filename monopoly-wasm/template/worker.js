@@ -1,4 +1,4 @@
-import init, { create_board } from "./$link(../pkg/monopoly_wasm.js)";
+import init, { create_board } from "$link(prefix=./|../pkg/monopoly_wasm.js)";
 
 let board;
 

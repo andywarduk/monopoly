@@ -3,6 +3,7 @@ name = "monopoly-lib"
 version = "0.1.0"
 edition = "2024"
 authors = ["Andrew Ward (andy.ward.uk@gmail.com)"]
+description = "Monopoly probablility library"
 
 [dependencies]
 rand = "0.8.5"

@@ -3,6 +3,7 @@ name = "monopoly-wasm"
 version = "0.1.0"
 edition = "2024"
 authors = ["Andrew Ward (andy.ward.uk@gmail.com)"]
+description = "Monopoly probability WASM web application"
 
 [lib]
 crate-type = ["cdylib"]

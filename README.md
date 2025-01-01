@@ -6,12 +6,17 @@
 
 rust, cargo and wasm-pack need to be installed to build the WASM version.
 
+To build an html directory containing individual assets and open it in the default browser:
 ```bash
 cd monopoly-wasm
 ./Build.sh
 ```
 
-Then open http://localhost:8000/
+To build a stand alone html page (single/index.htm) and open in the default browser:
+```bash
+cd monopoly-wasm
+./BuildSingle.sh
+```
 
 ## Console version: ##
 

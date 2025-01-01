@@ -16,8 +16,8 @@ then
 	exit
 fi
 
-# Package in to the html directory
-./package/target/release/package template/index.htm html
+# Package in to the single directory
+./package/target/release/package --single template/index.htm single
 
 if [ $? -ne 0 ]
 then
@@ -25,9 +25,7 @@ then
 fi
 
 # Print file details
-ls -l html
+ls -l single/index.htm
 
-# Run python web server
-./LaunchURL.sh http://127.0.0.1:8000/ 2 &
-
-python3 -m http.server 8000 --bind 127.0.0.1 -d html
+# Open the generated file
+./LaunchURL.sh single/index.htm
