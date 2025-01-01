@@ -2,7 +2,7 @@
 @font-face {
     font-family: "Kabel";
     src:
-        url("Kabel_Regular.woff") format("woff");
+        url("$link(Kabel_Regular.woff)") format("woff");
 }
 
 /* Use a more-intuitive box-sizing model */

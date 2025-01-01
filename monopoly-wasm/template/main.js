@@ -13,7 +13,7 @@ setup();
 function setup() {
     // Set up web worker
     if (window.Worker) {
-        worker = new Worker("worker.js", { type: "module" });
+        worker = new Worker("$link(worker.js)", { type: "module" });
         worker.onmessage = process_message;
     } else {
         alert("Web workers not available")

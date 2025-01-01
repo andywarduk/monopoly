@@ -1,8 +1,8 @@
-import init, { create_board } from "./pkg/monopoly_wasm.js";
+import init, { create_board } from "./$link(../pkg/monopoly_wasm.js)";
 
 let board;
 
-init().then(() => {
+init(new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.href)).then(() => {
     // Create the board
     board = create_board();
 
