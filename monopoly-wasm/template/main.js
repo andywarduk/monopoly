@@ -7,10 +7,15 @@ let worker;
 let square_desc;
 let square_type;
 let last_stats;
+let number_formatter;
+let percent_formatters = {};
 
 setup();
 
 function setup() {
+    // Set up number formatters
+    number_formatter = Intl.NumberFormat();
+
     // Set up web worker
     if (window.Worker) {
         worker = new Worker("$link(worker.js)", { type: "module" });
@@ -149,19 +154,11 @@ function process_ready(data) {
         }
 
         // Create percentage span
-        let pctspan = document.createElement("p");
-
-        pctspan.setAttribute("id", `pct${index}`);
-
-        div.appendChild(pctspan);
+        create_pct_span(div, index);
 
         if (type == 'J') {
             for (let i = 1; i <= 2; i++) {
-                let pctspan = document.createElement("p");
-
-                pctspan.setAttribute("id", `pct${index}-${i}`);
-
-                div.appendChild(pctspan);
+                create_pct_span(div, index, i);
             }
         }
 
@@ -190,6 +187,25 @@ function process_ready(data) {
     let fullboard = document.getElementById("fullboard");
     fullboard.onclick = fullboard_click;
     fullboard.style.display = "block";
+}
+
+function create_pct_span(parent, index, sub) {
+    let pctdiv = document.createElement("div");
+    let pctspan = document.createElement("span");
+
+    let id;
+
+    if (sub) {
+        id = `pct${index}-${sub}`;
+    } else {
+        id = `pct${index}`;
+    }
+
+    pctspan.setAttribute("id", id);
+    pctspan.setAttribute("class", "pct_span");
+
+    pctdiv.appendChild(pctspan);
+    parent.appendChild(pctdiv);
 }
 
 function set_to_colour(set) {
@@ -367,12 +383,13 @@ function process_stats(stats) {
         let elem = document.getElementById(id);
         let colour = `hsl(${rank * split}, 100%, 60%)`;
 
-        elem.innerHTML = `<span class="pct_span" style="background-color: ${colour}">${percent(arrivals, stats.moves)}</span>`;
+        elem.style.backgroundColor = colour;
+        elem.innerText = percent(arrivals, stats.moves);
     };
 
     // Clear the leaderboard
     let container = document.getElementById("leaderboard");
-    container.innerHTML = "";
+    container.textContent = "";
 
     // Create new leaderboard table
     let table = document.createElement("table");
@@ -441,7 +458,7 @@ function process_stats(stats) {
 
 function update_stat(id, value, total) {
     let elem = document.getElementById(id);
-    elem.innerText = value.toLocaleString();
+    elem.innerText = number_formatter.format(value);
 
     if (total) {
         elem = document.getElementById(`${id}_pct`);
@@ -488,7 +505,7 @@ function add_leaderboard(tbody, desc, value, total, sub, addelem) {
     td = document.createElement("td");
 
     td.setAttribute("class", "stat");
-    td.innerText = value.toLocaleString();
+    td.innerText = number_formatter.format(value);
 
     tr.appendChild(td);
 
@@ -529,7 +546,14 @@ function percent(value, total, dp) {
 
     dp = dp || 2;
 
-    return percentage.toLocaleString(undefined, { style: "percent", "minimumFractionDigits": dp, "maximumFractionDigits": dp });
+    let formatter = percent_formatters[dp];
+
+    if (!formatter) {
+        formatter = Intl.NumberFormat(undefined, { style: "percent", "minimumFractionDigits": dp, "maximumFractionDigits": dp });
+        percent_formatters[dp] = formatter;
+    }
+
+    return formatter.format(percentage);
 }
 
 function pause_click() {
@@ -576,11 +600,11 @@ function update_jailstats_button() {
     let elem;
 
     elem = document.getElementById(`pct${index}`);
-    elem.style.display = (split_just_visiting ? "none" : "block");
+    elem.style.display = (split_just_visiting ? "none" : "inline");
     elem = document.getElementById(`pct${index}-1`);
-    elem.style.display = (split_just_visiting ? "block" : "none");
+    elem.style.display = (split_just_visiting ? "inline" : "none");
     elem = document.getElementById(`pct${index}-2`);
-    elem.style.display = (split_just_visiting ? "block" : "none");
+    elem.style.display = (split_just_visiting ? "inline" : "none");
 
     if (last_stats) {
         process_stats(last_stats);

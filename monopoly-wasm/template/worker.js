@@ -2,7 +2,7 @@ import init, { create_board } from "$link(prefix=./|../pkg/monopoly_wasm.js)";
 
 let board;
 
-init(new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.href)).then(() => {
+init({ module_or_path: new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.href) }).then(() => {
     // Create the board
     board = create_board();
 
@@ -49,7 +49,7 @@ function get_stats() {
     return {
         turns: rstats.turns,
         moves: rstats.moves,
-        doubles: [doubles[0], doubles[1], doubles[2]],
+        doubles: doubles,
         arrivals: arrivals,
         reasons: reasons,
     }
