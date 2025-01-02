@@ -39,6 +39,7 @@ function get_stats() {
     let rstats = board.get_stats();
     let doubles = board.get_doubles();
     let arrivals = board.get_arrivals();
+    let rollfreq = board.get_rollfreq();
 
     let reasons = [];
 
@@ -52,5 +53,6 @@ function get_stats() {
         doubles: doubles,
         arrivals: arrivals,
         reasons: reasons,
+        rollfreq: rollfreq,
     }
 }

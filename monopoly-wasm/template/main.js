@@ -258,7 +258,7 @@ function type_to_icon(type) {
     };
 }
 
-function pretty_desc(desc, type) {
+function pretty_desc(desc, type, show_elem) {
     // Return description of property according to UK Monopoly version
     switch (type) {
         case 'P':
@@ -318,6 +318,18 @@ function pretty_desc(desc, type) {
                     return "Fenchurch St. Station";
                 case "R4":
                     return "Liverpool St. Station";
+            }
+        case 'C':
+            if (show_elem) {
+                return `Community Chest ${desc.substring(1)}`;
+            } else {
+                return "Community Chest";
+            }
+        case 'c':
+            if (show_elem) {
+                return `Chance ${desc.substring(1)}`;
+            } else {
+                return "Chance";
             }
     }
 
@@ -398,8 +410,8 @@ function process_stats(stats) {
     let tbody = document.createElement("tbody");
     table.appendChild(tbody);
 
-    // Get top 15 or full
-    for (let i = 0; i < (full_leaderboard ? leaderboard.length : 15); i++) {
+    // Get top 20 or full
+    for (let i = 0; i < (full_leaderboard ? leaderboard.length : 20); i++) {
         let elem = leaderboard[i][0];
         let stat = leaderboard[i][1];
         let sub = leaderboard[i][2];
@@ -419,7 +431,7 @@ function process_stats(stats) {
         if (sub == 2) {
             desc = "Just Visiting";
         } else {
-            desc = pretty_desc(square_desc[elem], square_type[elem]);
+            desc = pretty_desc(square_desc[elem], square_type[elem], true);
         }
 
         // Add leaderboard main entry
@@ -447,6 +459,59 @@ function process_stats(stats) {
             }
 
             add_leaderboard(tbody, arrival_reason_desc(index), count, stat, true)
+        }
+    }
+
+    // Roll frequencies
+    let rolls = stats.rollfreq;
+
+    let max = rolls.reduce((max, r) => {
+        if (r > max) {
+            return Number(r);
+        } else {
+            return max;
+        }
+    }, 0n);
+
+    for (const [i, count] of rolls.entries()) {
+        let index = i + 2;
+        let pct = (Number(count) / Number(stats.moves));
+
+        let barpct = (Number(count) / max) * 100;
+        let graphbar = document.getElementById(`rollgraph${index}`);
+        graphbar.style.height = `${barpct}%`;
+
+        if (i < 11 && count < rolls[i + 1]) {
+            graphbar.style.borderRight = "0px";
+        }
+
+        if (i > 0 && count < rolls[i - 1]) {
+            graphbar.style.borderLeft = "0px";
+        }
+
+        let pctcell = document.getElementById(`rollpct${index}`);
+        pctcell.innerText = percentfmt(pct, 4);
+
+        let numerator;
+
+        if (index <= 7) {
+            numerator = index - 1;
+        } else {
+            numerator = 13 - index;
+        }
+
+        let expected = numerator / 36;
+        let error = pct - expected;
+
+        let err = document.getElementById(`rollpcterr${index}`);
+        err.innerText = percentfmt(error, 4);
+
+        if (error < 0) {
+            err.style.color = "red";
+        } else if (error > 0) {
+            err.style.color = "green";
+        } else {
+            err.style.color = "black";
         }
     }
 
@@ -544,6 +609,10 @@ function percent(value, total, dp) {
         percentage = Number(value) / Number(total);
     }
 
+    return percentfmt(percentage, dp);
+}
+
+function percentfmt(value, dp) {
     dp = dp || 2;
 
     let formatter = percent_formatters[dp];
@@ -553,7 +622,7 @@ function percent(value, total, dp) {
         percent_formatters[dp] = formatter;
     }
 
-    return formatter.format(percentage);
+    return formatter.format(value);
 }
 
 function pause_click() {

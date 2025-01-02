@@ -39,8 +39,8 @@ impl WasmBoard {
                     1 => "Water Works".to_string(),
                     _ => panic!("Unexpected utility"),
                 },
-                Space::CommunityChest(_) => "Community Chest".to_string(),
-                Space::Chance(_) => "Chance".to_string(),
+                Space::CommunityChest(n) => format!("C{}", n + 1),
+                Space::Chance(n) => format!("c{}", n + 1),
                 Space::Tax(n) => match n {
                     0 => "Income Tax".to_string(),
                     1 => "Luxury Tax".to_string(),
@@ -95,6 +95,10 @@ impl WasmBoard {
 
     pub fn get_arrival_reasons(&self, elem: usize) -> Vec<u64> {
         self.board.arrival_reasons(elem).to_vec()
+    }
+
+    pub fn get_rollfreq(&self) -> Vec<u64> {
+        self.board.rollfreq().to_vec()
     }
 }
 

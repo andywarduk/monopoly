@@ -18,6 +18,7 @@ pub struct Board {
     moves: u64,
     turns: u64,
     doubles: [u64; 3],
+    rollfreq: [u64; 11],
     rng: ThreadRng,
 }
 
@@ -107,6 +108,7 @@ impl Default for Board {
             moves: 0,
             turns: 0,
             doubles: [0; 3],
+            rollfreq: [0; 11],
             rng,
         }
     }
@@ -125,6 +127,9 @@ impl Board {
 
             // Calculate total
             let total = d1 + d2;
+
+            // Count roll
+            self.rollfreq[total as usize - 2] += 1;
 
             // Thrown a double?
             let double = d1 == d2;
@@ -153,10 +158,6 @@ impl Board {
         if doubles > 0 {
             self.doubles[doubles - 1] += 1;
         }
-    }
-
-    pub fn position(&self) -> usize {
-        self.position
     }
 
     pub fn space(&self, elem: usize) -> &Space {
@@ -193,6 +194,10 @@ impl Board {
 
     pub fn doubles_elem(&self, elem: usize) -> u64 {
         self.doubles[elem]
+    }
+
+    pub fn rollfreq(&self) -> &[u64] {
+        &self.rollfreq
     }
 
     fn shuffle_deck<T: Copy>(rng: &mut ThreadRng, mut add: Vec<T>, default: T) -> VecDeque<T> {
