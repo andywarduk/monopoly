@@ -2,7 +2,7 @@ let debug = false;
 let paused = false;
 let split_just_visiting = true;
 let full_leaderboard = false;
-const iterations = 1000;
+const iterations = 10_000;
 let worker;
 let square_desc;
 let square_type;
