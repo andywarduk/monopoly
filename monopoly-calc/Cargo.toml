@@ -6,4 +6,7 @@ edition = "2024"
 [dependencies]
 monopoly-lib = { path = "../monopoly-lib" }
 nalgebra = "0.33.2"
+num-traits = "0.2.19"
+num-derive = "0.4.2"
+clap = { version = "4.3.3", features = ["derive"] }
 rust_xlsxwriter = "0.80.0"

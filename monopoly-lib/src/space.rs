@@ -129,7 +129,7 @@ pub const SPACES: [Space; 40] = [
 ];
 
 #[repr(u8)]
-#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+#[derive(Debug, Display, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub enum PropertySet {
     Brown,
     LightBlue,
