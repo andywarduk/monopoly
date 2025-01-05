@@ -221,7 +221,7 @@ fn test_chance_to_cc() {
 fn test_chance_to_cc_to_go() {
     let mut board = Board::new(Strategy::JailWait, false);
 
-    // Position 5 spaces before chance 3
+    // Position 5 spaces before chance 3 (G1)
     board.position = 31;
 
     board.chcardchoose = |_board| CHCard::Back3;

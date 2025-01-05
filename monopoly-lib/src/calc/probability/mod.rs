@@ -41,6 +41,16 @@ impl Probability {
         p
     }
 
+    pub const fn reciprocal(&self) -> Self {
+        let (numerator, denominator) = if self.numerator < 0 {
+            (-(self.denominator as i64), (-self.numerator as u64))
+        } else {
+            (self.denominator as i64, self.numerator as u64)
+        };
+
+        Self { numerator, denominator }
+    }
+
     pub const fn as_f64(&self) -> f64 {
         self.numerator as f64 / self.denominator as f64
     }
@@ -164,6 +174,15 @@ impl<I: Num + NumCast> Mul<I> for Probability {
         ret.normalise();
 
         ret
+    }
+}
+
+impl Div for Probability {
+    type Output = Self;
+
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn div(self, other: Self) -> Self {
+        self * other.reciprocal()
     }
 }
 

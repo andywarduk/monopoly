@@ -172,7 +172,45 @@ fn test_mulassign2() {
 }
 
 #[test]
+fn test_mulscalar1() {
+    let a = p!(1 / 2);
+
+    let c = a * 3;
+
+    assert_eq!(c, p!(3 / 2));
+}
+
+#[test]
+fn test_mulscalar2() {
+    let a = p!(2 / 3);
+
+    let c = a * 3;
+
+    assert_eq!(c, p!(2 / 1));
+}
+
+#[test]
 fn test_div1() {
+    let a = p!(2 / 3);
+    let b = p!(1 / 4);
+
+    let c = a / b;
+
+    assert_eq!(c, p!(8 / 3));
+}
+
+#[test]
+fn test_div2() {
+    let a = p!(2 / 3);
+    let b = p!(3 / 4);
+
+    let c = a / b;
+
+    assert_eq!(c, p!(8 / 9));
+}
+
+#[test]
+fn test_divscalar1() {
     let a = p!(2 / 3);
 
     let c = a / 2;
@@ -181,7 +219,7 @@ fn test_div1() {
 }
 
 #[test]
-fn test_div2() {
+fn test_divscalar2() {
     let a = p!(2 / 3);
 
     let c = a / 3;

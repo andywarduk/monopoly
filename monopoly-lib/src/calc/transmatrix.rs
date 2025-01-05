@@ -181,7 +181,7 @@ impl TransMatrix {
             // For each possible dice roll
             for (d1, d2, sum, double) in dice_rolls() {
                 if debug {
-                    print!("  {start} + {d1}{d2} ({sum}, {}) -> ", if double { "double" } else { "not double" });
+                    print!("  {start} + {d1}{d2} ({sum}, {}) =>", if double { "double" } else { "not double" });
                 }
 
                 // Calculate state after rolling the dice
@@ -233,11 +233,17 @@ impl TransMatrix {
                 let j = *states.get(&move_state).unwrap();
                 movemat[(i, j)] += ROLL_PROB;
 
+                if debug {
+                    print!(" {}×{}", move_state, ROLL_PROB);
+                }
+
                 // Process jumps
-                Self::process_jumps(i, move_state, ROLL_PROB, states, jumpmat, &mut combmat, debug);
+                let mut first = true;
+
+                Self::process_jumps(i, move_state, ROLL_PROB, states, jumpmat, &mut combmat, debug, &mut first);
 
                 if debug {
-                    println!();
+                    println!(" )");
                 }
             }
 
@@ -257,11 +263,12 @@ impl TransMatrix {
     fn process_jumps(
         i: usize,
         move_state: State,
-        probability: Probability,
+        parent_prob: Probability,
         states: &BTreeMap<State, usize>,
         jumpmat: &DMatrix<Probability>,
         combmat: &mut DMatrix<Probability>,
         debug: bool,
+        first: &mut bool,
     ) {
         // Get jumps from the new position
         let jumps = jumpmat.row(move_state.position);
@@ -272,21 +279,28 @@ impl TransMatrix {
                 continue;
             }
 
+            let prob = *prob * parent_prob;
+
             let doubles = if SPACES[pos] == Space::GoToJail { 0 } else { move_state.doubles };
 
             let jump_state = State::new(doubles, pos, move_state.jailroll);
 
             if pos == move_state.position {
                 if debug {
-                    print!(" {}-{prob}", jump_state);
+                    if *first {
+                        print!(" × ( {}×{}", jump_state, prob / ROLL_PROB);
+                        *first = false;
+                    } else {
+                        print!(" + {}×{}", jump_state, prob / ROLL_PROB);
+                    }
                 }
 
                 // Set combined matrix entry
                 let j = *states.get(&jump_state).unwrap();
-                combmat[(i, j)] += probability * *prob;
+                combmat[(i, j)] += prob;
             } else {
                 // Recurse
-                Self::process_jumps(i, jump_state, probability * *prob, states, jumpmat, combmat, debug);
+                Self::process_jumps(i, jump_state, prob, states, jumpmat, combmat, debug, first);
             }
         }
     }
