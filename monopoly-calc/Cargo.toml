@@ -1,0 +1,9 @@
+[package]
+name = "monopoly-calc"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+monopoly-lib = { path = "../monopoly-lib" }
+nalgebra = "0.33.2"
+rust_xlsxwriter = "0.80.0"

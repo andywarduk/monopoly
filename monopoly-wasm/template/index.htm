@@ -8,229 +8,254 @@
     <link rel="stylesheet" type="text/css" href="$link(styles.css)" />
 </head>
 
-<body>
-    <div class="board_div">
-        <!-- Board table -->
-        <table class="board_tab">
-            <tbody>
-                <tr>
-                    <td id="0" class="space_cell"></td>
-                    <td id="1" class="space_cell"></td>
-                    <td id="2" class="space_cell"></td>
-                    <td id="3" class="space_cell"></td>
-                    <td id="4" class="space_cell"></td>
-                    <td id="5" class="space_cell"></td>
-                    <td id="6" class="space_cell"></td>
-                    <td id="7" class="space_cell"></td>
-                    <td id="8" class="space_cell"></td>
-                    <td id="9" class="space_cell"></td>
-                    <td id="10" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="39" class="space_cell"></td>
-                    <td colspan="9" rowspan="9">
-                        <div class="title_div">
-                            <div class="title_border">
-                                <h1 class="title">MONOPOLY</h1>
-                            </div>
-                        </div>
-                    </td>
-                    <td id="11" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="38" class="space_cell"></td>
-                    <td id="12" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="37" class="space_cell"></td>
-                    <td id="13" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="36" class="space_cell"></td>
-                    <td id="14" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="35" class="space_cell"></td>
-                    </td>
-                    <td id="15" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="34" class="space_cell"></td>
-                    <td id="16" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="33" class="space_cell"></td>
-                    <td id="17" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="32" class="space_cell"></td>
-                    <td id="18" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="31" class="space_cell"></td>
-                    <td id="19" class="space_cell"></td>
-                </tr>
-                <tr>
-                    <td id="30" class="space_cell"></td>
-                    <td id="29" class="space_cell"></td>
-                    <td id="28" class="space_cell"></td>
-                    <td id="27" class="space_cell"></td>
-                    <td id="26" class="space_cell"></td>
-                    <td id="25" class="space_cell"></td>
-                    <td id="24" class="space_cell"></td>
-                    <td id="23" class="space_cell"></td>
-                    <td id="22" class="space_cell"></td>
-                    <td id="21" class="space_cell"></td>
-                    <td id="20" class="space_cell"></td>
-                </tr>
-            </tbody>
-        </table>
-
-        <div class="buttons">
-            <!-- Pause / play button -->
-            <button id="pause" style="display: none"></button>
-
-            <!-- Split jail statistics button -->
-            <button id="splitjail" style="display: none"></button>
-
-            <!-- Full leaderboard -->
-            <button id="fullboard" style="display: none"></button>
-        </div>
-
-        <!-- Roll frequency -->
-        <h3>Roll Frequency:</h3>
-
-        <div>
-            <table class="rolltable">
-                <tbody>
-                    <tr>
-                        <td>2</td>
-                        <td>3</td>
-                        <td>4</td>
-                        <td>5</td>
-                        <td>6</td>
-                        <td>7</td>
-                        <td>8</td>
-                        <td>9</td>
-                        <td>10</td>
-                        <td>11</td>
-                        <td>12</td>
-                    </tr>
-                    <tr>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph2"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph3"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph4"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph5"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph6"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph7"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph8"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph9"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph10"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph11"></div>
-                        </td>
-                        <td class="rollgraphbar">
-                            <div class="rollgraphval" id="rollgraph12"></div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td id="rollpct2" class="rollpct"></td>
-                        <td id="rollpct3" class="rollpct"></td>
-                        <td id="rollpct4" class="rollpct"></td>
-                        <td id="rollpct5" class="rollpct"></td>
-                        <td id="rollpct6" class="rollpct"></td>
-                        <td id="rollpct7" class="rollpct"></td>
-                        <td id="rollpct8" class="rollpct"></td>
-                        <td id="rollpct9" class="rollpct"></td>
-                        <td id="rollpct10" class="rollpct"></td>
-                        <td id="rollpct11" class="rollpct"></td>
-                        <td id="rollpct12" class="rollpct"></td>
-                    </tr>
-                    <tr>
-                        <td id="rollpcterr2" class="rollpct"></td>
-                        <td id="rollpcterr3" class="rollpct"></td>
-                        <td id="rollpcterr4" class="rollpct"></td>
-                        <td id="rollpcterr5" class="rollpct"></td>
-                        <td id="rollpcterr6" class="rollpct"></td>
-                        <td id="rollpcterr7" class="rollpct"></td>
-                        <td id="rollpcterr8" class="rollpct"></td>
-                        <td id="rollpcterr9" class="rollpct"></td>
-                        <td id="rollpcterr10" class="rollpct"></td>
-                        <td id="rollpcterr11" class="rollpct"></td>
-                        <td id="rollpcterr12" class="rollpct"></td>
-                    </tr>
-                </tbody>
-            </table>
+<body style="overflow: hidden;">
+    <div id="loading" class="spinner_row">
+        <div class="spinner_col">
+            <!--div-->
+            <div class="spinner"></div>
+            <p id="spinnermsg">Loading...</p>
+            <!--/div-->
         </div>
     </div>
 
-    <div class="stats">
-        <h3>Game statistics:</h3>
-        <table>
-            <tbody>
-                <tr>
-                    <td class="statlabel">Turns taken:</td>
-                    <td id="stat_turns" class="stat"></td>
-                </tr>
-                <tr class="substat">
-                    <td class="statlabel">Single move turns:</td>
-                    <td id="stat_turns_single" class="stat"></td>
-                    <td id="stat_turns_single_pct" class="statpct"></td>
-                </tr>
-                <tr class="substat">
-                    <td class="statlabel">Double move turns:</td>
-                    <td id="stat_turns_double" class="stat"></td>
-                    <td id="stat_turns_double_pct" class="statpct"></td>
-                </tr>
-                <tr class="substat">
-                    <td class="statlabel">Triple move turns:</td>
-                    <td id="stat_turns_triple" class="stat"></td>
-                    <td id="stat_turns_triple_pct" class="statpct"></td>
-                </tr>
-                <tr class="substat">
-                    <td class="statlabel">Double double turns:</td>
-                    <td id="stat_ddoubles" class="stat"></td>
-                    <td id="stat_ddoubles_pct" class="statpct"></td>
-                </tr>
-                <tr class="substat">
-                    <td class="statlabel">Triple double turns:</td>
-                    <td id="stat_tdoubles" class="stat"></td>
-                    <td id="stat_tdoubles_pct" class="statpct"></td>
-                </tr>
-                <tr>
-                    <td class="statlabel">Moves made:</td>
-                    <td id="stat_moves" class="stat"></td>
-                </tr>
-                <tr class="substat">
-                    <td class="statlabel">Moves from double:</td>
-                    <td id="stat_doubles_tot" class="stat"></td>
-                    <td id="stat_doubles_tot_pct" class="statpct"></td>
-                </tr>
-            </tbody>
-        </table>
+    <div id="main" style="display: none;">
+        <div class="board_div">
+            <!-- Board table -->
+            <table class="board_tab">
+                <tbody>
+                    <tr>
+                        <td id="0" class="space_cell"></td>
+                        <td id="1" class="space_cell"></td>
+                        <td id="2" class="space_cell"></td>
+                        <td id="3" class="space_cell"></td>
+                        <td id="4" class="space_cell"></td>
+                        <td id="5" class="space_cell"></td>
+                        <td id="6" class="space_cell"></td>
+                        <td id="7" class="space_cell"></td>
+                        <td id="8" class="space_cell"></td>
+                        <td id="9" class="space_cell"></td>
+                        <td id="10" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="39" class="space_cell"></td>
+                        <td colspan="9" rowspan="9">
+                            <div class="title_div">
+                                <div class="title_border">
+                                    <h1 class="title">MONOPOLY</h1>
+                                </div>
+                            </div>
+                        </td>
+                        <td id="11" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="38" class="space_cell"></td>
+                        <td id="12" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="37" class="space_cell"></td>
+                        <td id="13" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="36" class="space_cell"></td>
+                        <td id="14" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="35" class="space_cell"></td>
+                        </td>
+                        <td id="15" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="34" class="space_cell"></td>
+                        <td id="16" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="33" class="space_cell"></td>
+                        <td id="17" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="32" class="space_cell"></td>
+                        <td id="18" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="31" class="space_cell"></td>
+                        <td id="19" class="space_cell"></td>
+                    </tr>
+                    <tr>
+                        <td id="30" class="space_cell"></td>
+                        <td id="29" class="space_cell"></td>
+                        <td id="28" class="space_cell"></td>
+                        <td id="27" class="space_cell"></td>
+                        <td id="26" class="space_cell"></td>
+                        <td id="25" class="space_cell"></td>
+                        <td id="24" class="space_cell"></td>
+                        <td id="23" class="space_cell"></td>
+                        <td id="22" class="space_cell"></td>
+                        <td id="21" class="space_cell"></td>
+                        <td id="20" class="space_cell"></td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <br />
+            <div class="buttons">
+                <!-- Pause / play button -->
+                <button id="pause"></button>
 
-        <h3>Leaderboard:</h3>
-        <div id="leaderboard"></div>
+                <!-- Split jail statistics button -->
+                <button id="splitjail"></button>
+
+                <!-- Full leaderboard -->
+                <button id="fullboard"></button>
+
+                <!-- Strategy -->
+                <button id="strategy"></button>
+            </div>
+
+            <!-- Roll frequency -->
+            <h3>Roll Frequency:</h3>
+
+            <div>
+                <table class="rolltable">
+                    <tbody>
+                        <tr>
+                            <td>2</td>
+                            <td>3</td>
+                            <td>4</td>
+                            <td>5</td>
+                            <td>6</td>
+                            <td>7</td>
+                            <td>8</td>
+                            <td>9</td>
+                            <td>10</td>
+                            <td>11</td>
+                            <td>12</td>
+                        </tr>
+                        <tr>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph2"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph3"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph4"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph5"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph6"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph7"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph8"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph9"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph10"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph11"></div>
+                            </td>
+                            <td class="rollgraphbar">
+                                <div class="rollgraphval" id="rollgraph12"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td id="rollpct2" class="rollpct"></td>
+                            <td id="rollpct3" class="rollpct"></td>
+                            <td id="rollpct4" class="rollpct"></td>
+                            <td id="rollpct5" class="rollpct"></td>
+                            <td id="rollpct6" class="rollpct"></td>
+                            <td id="rollpct7" class="rollpct"></td>
+                            <td id="rollpct8" class="rollpct"></td>
+                            <td id="rollpct9" class="rollpct"></td>
+                            <td id="rollpct10" class="rollpct"></td>
+                            <td id="rollpct11" class="rollpct"></td>
+                            <td id="rollpct12" class="rollpct"></td>
+                        </tr>
+                        <tr>
+                            <td id="rollpcterr2" class="rollpct"></td>
+                            <td id="rollpcterr3" class="rollpct"></td>
+                            <td id="rollpcterr4" class="rollpct"></td>
+                            <td id="rollpcterr5" class="rollpct"></td>
+                            <td id="rollpcterr6" class="rollpct"></td>
+                            <td id="rollpcterr7" class="rollpct"></td>
+                            <td id="rollpcterr8" class="rollpct"></td>
+                            <td id="rollpcterr9" class="rollpct"></td>
+                            <td id="rollpcterr10" class="rollpct"></td>
+                            <td id="rollpcterr11" class="rollpct"></td>
+                            <td id="rollpcterr12" class="rollpct"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="stats">
+            <h3>Game statistics:</h3>
+            <table>
+                <tbody>
+                    <tr>
+                        <td class="statlabel">Turns taken:</td>
+                        <td id="stat_turns" class="stat"></td>
+                    </tr>
+                    <tr class="substat">
+                        <td class="statlabel">Single move turns:</td>
+                        <td id="stat_turns_single" class="stat"></td>
+                        <td id="stat_turns_single_pct" class="statpct"></td>
+                    </tr>
+                    <tr class="substat">
+                        <td class="statlabel">Double move turns:</td>
+                        <td id="stat_turns_double" class="stat"></td>
+                        <td id="stat_turns_double_pct" class="statpct"></td>
+                    </tr>
+                    <tr class="substat">
+                        <td class="statlabel">Triple move turns:</td>
+                        <td id="stat_turns_triple" class="stat"></td>
+                        <td id="stat_turns_triple_pct" class="statpct"></td>
+                    </tr>
+                    <tr class="substat">
+                        <td class="statlabel">Double double turns:</td>
+                        <td id="stat_ddoubles" class="stat"></td>
+                        <td id="stat_ddoubles_pct" class="statpct"></td>
+                    </tr>
+                    <tr class="substat">
+                        <td class="statlabel">Triple double turns:</td>
+                        <td id="stat_tdoubles" class="stat"></td>
+                        <td id="stat_tdoubles_pct" class="statpct"></td>
+                    </tr>
+                    <tr>
+                        <td class="statlabel">Moves made:</td>
+                        <td id="stat_moves" class="stat"></td>
+                    </tr>
+                    <tr class="substat">
+                        <td class="statlabel">Moves from double:</td>
+                        <td id="stat_doubles_tot" class="stat"></td>
+                        <td id="stat_doubles_tot_pct" class="statpct"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <br />
+
+            <h3>Leaderboard:</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: left;">Space</th>
+                        <th style="text-align: right;">Arrivals</th>
+                        <th style="text-align: right;">Percentage</th>
+                        <th style="text-align: right;">Expected</th>
+                        <th style="text-align: right;">Error</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Load the main script -->

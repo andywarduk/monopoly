@@ -4,18 +4,23 @@ use std::{
     time::Duration,
 };
 
+use clap::Parser;
+use cli::Cli;
 use crossterm::{
     cursor,
-    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, poll},
+    event::{self, poll, Event, KeyCode, KeyEvent, KeyEventKind},
     execute, queue,
     style::{self, Color, Colors},
     terminal::{self, ClearType},
     tty::IsTty,
 };
 
-use monopoly_lib::{Board, MoveReason, Space};
+use monopoly_lib::{sim::movereason::MoveReason, sim::Board, space::SPACES};
+use monopoly_lib::{space::Space, strategy::Strategy};
 use num_traits::{FromPrimitive, Num, NumCast};
 use numformat::NumFormat;
+
+mod cli;
 
 fn main() -> Result<(), Box<dyn Error>> {
     // Check we've got a terminal
@@ -23,29 +28,23 @@ fn main() -> Result<(), Box<dyn Error>> {
         Err("stdout is not a tty")?;
     }
 
+    // Parse command line arguments
+    let cli = Cli::parse();
+
     // Get stdout
     let mut stdout = stdout();
 
     // Enter alternate screen and clear it
-    execute!(
-        stdout,
-        terminal::EnterAlternateScreen,
-        terminal::Clear(ClearType::All),
-    )?;
+    execute!(stdout, terminal::EnterAlternateScreen, terminal::Clear(ClearType::All),)?;
 
     // Enable raw mode
     terminal::enable_raw_mode()?;
 
     // Play the game
-    game_loop(&mut stdout)?;
+    game_loop(&mut stdout, if cli.wait { Strategy::JailWait } else { Strategy::PayJail })?;
 
     // Reset the terminal
-    execute!(
-        stdout,
-        style::ResetColor,
-        cursor::Show,
-        terminal::LeaveAlternateScreen
-    )?;
+    execute!(stdout, style::ResetColor, cursor::Show, terminal::LeaveAlternateScreen)?;
 
     // Disable raw mode
     terminal::disable_raw_mode()?;
@@ -61,15 +60,15 @@ struct State {
     split_jail: bool,
 }
 
-fn game_loop<W>(w: &mut W) -> io::Result<()>
+fn game_loop<W>(w: &mut W, strategy: Strategy) -> io::Result<()>
 where
     W: io::Write,
 {
     // Create state
     let mut state = State::default();
 
-    // Create the board
-    let mut board = Board::default();
+    // Create the board, cards pulled in order
+    let mut board = Board::new(strategy, false);
 
     // Play the game
     while !state.terminate {
@@ -172,11 +171,7 @@ where
     W: io::Write,
 {
     let mut draw_instruction_line = |y: &mut u16, line| -> io::Result<()> {
-        queue!(
-            w,
-            cursor::MoveTo(6, *y + 13),
-            style::Print(format!("{:^55}", line)),
-        )?;
+        queue!(w, cursor::MoveTo(6, *y + 13), style::Print(format!("{:^55}", line)),)?;
 
         *y += 1;
 
@@ -260,9 +255,9 @@ where
     };
 
     let mut draw_square = |x, y, elem| -> io::Result<()> {
-        let desc = space_desc(board, elem);
+        let desc = space_desc(elem);
 
-        draw_square_int(x, y, desc, board.arrivals_on(elem), board.space(elem))
+        draw_square_int(x, y, desc, board.arrivals_on(elem), &SPACES[elem])
     };
 
     // Top row
@@ -296,20 +291,8 @@ where
         let jail = board.arrival_reasons(elem).iter().sum::<u64>();
         let visit = board.arrivals_on(elem) - jail;
 
-        draw_square_int(
-            XPAD + (10 * XSPACE),
-            YPAD,
-            "VISIT".to_string(),
-            visit,
-            board.space(elem),
-        )?;
-        draw_square_int(
-            XPAD + (9 * XSPACE),
-            YPAD + YSPACE,
-            "JAIL".to_string(),
-            jail,
-            board.space(elem),
-        )?;
+        draw_square_int(XPAD + (10 * XSPACE), YPAD, "VISIT".to_string(), visit, &SPACES[elem])?;
+        draw_square_int(XPAD + (9 * XSPACE), YPAD + YSPACE, "JAIL".to_string(), jail, &SPACES[elem])?;
     } else {
         // Combined jail
         draw_square(XPAD + (10 * XSPACE), YPAD, 10)?;
@@ -335,22 +318,17 @@ where
         Ok(())
     };
 
-    let draw_stat_pct =
-        |w: &mut W, y: &mut u16, desc: &str, value: u64, total, dp| -> io::Result<()> {
-            let pct = percent(value, total);
+    let draw_stat_pct = |w: &mut W, y: &mut u16, desc: &str, value: u64, total, dp| -> io::Result<()> {
+        let pct = percent(value, total);
 
-            draw_stat(w, y, desc, value)?;
-            queue!(w, style::Print(format!("  ({:.dp$}%)  ", pct,)),)?;
+        draw_stat(w, y, desc, value)?;
+        queue!(w, style::Print(format!("  ({:.dp$}%)  ", pct,)),)?;
 
-            Ok(())
-        };
+        Ok(())
+    };
 
     let blank_line = |w: &mut W, y: &mut u16| -> io::Result<()> {
-        queue!(
-            w,
-            cursor::MoveTo(4 + (11 * XSPACE), *y + YPAD),
-            style::Print(format!("{:52}", "")),
-        )?;
+        queue!(w, cursor::MoveTo(4 + (11 * XSPACE), *y + YPAD), style::Print(format!("{:52}", "")),)?;
 
         *y += 1;
 
@@ -384,7 +362,7 @@ where
             .iter()
             .enumerate()
             .flat_map(|(i, a)| {
-                if *board.space(i) == Space::Jail {
+                if SPACES[i] == Space::Jail {
                     let jail = board.arrival_reasons(i).iter().sum::<u64>();
 
                     vec![
@@ -397,26 +375,20 @@ where
             })
             .collect::<Vec<_>>()
     } else {
-        board
-            .arrivals()
-            .iter()
-            .enumerate()
-            .map(|(i, a)| (*a, i, 0))
-            .collect::<Vec<_>>()
+        board.arrivals().iter().enumerate().map(|(i, a)| (*a, i, 0)).collect::<Vec<_>>()
     };
 
     sorted.sort();
 
     for (a, elem, sub) in sorted.into_iter().rev().take(10) {
-        let desc = space_desc(board, elem);
+        let desc = space_desc(elem);
         draw_stat_pct(w, &mut y, desc.as_str(), a, board.moves(), 2)?;
 
         queue!(w, style::SetAttribute(style::Attribute::Dim),)?;
 
-        if !split_jail && *board.space(elem) == Space::Jail {
+        if !split_jail && SPACES[elem] == Space::Jail {
             // Special for jail - show % for just visiting
-            let visiting =
-                board.arrivals_on(elem) - board.arrival_reasons(elem).iter().sum::<u64>();
+            let visiting = board.arrivals_on(elem) - board.arrival_reasons(elem).iter().sum::<u64>();
 
             draw_stat_pct(w, &mut y, &format!("  {}", "Visiting"), visiting, a, 2)?;
         }
@@ -428,14 +400,7 @@ where
 
         for (reason, count) in board.arrival_reasons(elem).iter().enumerate() {
             if *count != 0 {
-                draw_stat_pct(
-                    w,
-                    &mut y,
-                    &format!("  {}", MoveReason::from_usize(reason).unwrap()),
-                    *count,
-                    a,
-                    2,
-                )?;
+                draw_stat_pct(w, &mut y, &format!("  {}", MoveReason::from_usize(reason).unwrap()), *count, a, 2)?;
             }
         }
 
@@ -457,8 +422,8 @@ fn percent<I: Num + NumCast>(value: I, total: I) -> f64 {
     }
 }
 
-fn space_desc(board: &Board, elem: usize) -> String {
-    match board.space(elem) {
+fn space_desc(elem: usize) -> String {
+    match SPACES[elem] {
         Space::Go => "GO".to_string(),
         Space::Jail => "JAIL".to_string(),
         Space::FreeParking => "FREE".to_string(),

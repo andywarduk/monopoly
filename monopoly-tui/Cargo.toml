@@ -12,3 +12,4 @@ rand = "0.8.5"
 numformat = { git = "https://github.com/andywarduk/numformat.git" }
 num-traits = "0.2.19"
 num-derive = "0.4.2"
+clap = { version = "4.3.3", features = ["derive"] }

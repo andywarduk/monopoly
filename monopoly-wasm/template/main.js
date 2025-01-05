@@ -1,15 +1,40 @@
-let debug = false;
+const debug = false; // Set to true to debug this script
+const workerdebug = false; // Set to true to debug worker
+
+const iterations = 10_000; // Number of iterations to perform in each chunk
+
+// Spinner state
+let spinner = true;
+
+// Button toggles
 let paused = false;
+let jailwait = false;
 let split_just_visiting = true;
 let full_leaderboard = false;
-const iterations = 10_000;
+
+// Worker thread object
 let worker;
+
+// Description of each space
 let square_desc;
+
+// Type of each space
 let square_type;
+
+// Arrival reason element descriptions
+let arrival_reason_descs;
+
+// Last statistics gathered
 let last_stats;
+
+// Expected probabilities for arriving at each space
+let expected_freq;
+
+// Number formatters
 let number_formatter;
 let percent_formatters = {};
 
+// Run setup
 setup();
 
 function setup() {
@@ -19,39 +44,77 @@ function setup() {
     // Set up web worker
     if (window.Worker) {
         worker = new Worker("$link(worker.js)", { type: "module" });
-        worker.onmessage = process_message;
+        worker.onmessage = process_worker_message;
     } else {
         alert("Web workers not available")
     }
 }
 
-function process_message(msg) {
+function process_worker_message(msg) {
     if (debug) {
         console.debug("Got message from worker:", msg);
     }
 
     switch (msg.data.msgtype) {
-        case "ready":
+        case "loaded":
+            // Worker is loaded
             if (debug) {
-                console.debug("Got 'ready' from worker:", msg.data);
+                console.debug("Got 'loaded' from worker:", msg.data);
             }
 
-            // Process the message
-            process_ready(msg.data);
+            // Initialise the worker
+            worker_init(true);
 
-            // Start worker running
-            worker.postMessage({ msgtype: "execute", ticks: iterations });
+            break;
+
+        case "initfin":
+        case "reinitfin":
+            // Process initialisation result
+            if (debug) {
+                console.debug(`Got ${msg.data.msgtype} from worker:`, msg.data);
+            }
+
+            if (msg.data.msgtype == "initfin") {
+                // Set up the board after first initialise
+                setup_board(msg.data);
+            }
+
+            // Get worker to calculate expected frequencies
+            spinner_message("Calculating expected frequencies...");
+
+            // Ask worker to calculate expected frequencies
+            worker.postMessage({ msgtype: "calcexpected", jailwait: jailwait });
+
+            break;
+
+        case "calcexpectedfin":
+            // Process expected frequencies result
+            if (debug) {
+                console.debug(`Got 'calcexpectedfin' from worker:`, msg.data);
+            }
+
+            // Save expected frequencies
+            expected_freq = msg.data.freq;
+
+            // Hide spinner
+            spinner_show(false);
+
+            // Start worker executing
+            if (!paused) {
+                worker.postMessage({ msgtype: "exec", ticks: iterations });
+            }
 
             break;
 
         case "execfin":
+            // Execute chunk finished
             if (debug) {
                 console.debug("Got 'execfin' from worker:", msg.data);
             }
 
-            if (!paused) {
+            if (!paused && !spinner) {
                 // Execute next chunk
-                worker.postMessage({ msgtype: "execute", ticks: iterations });
+                worker.postMessage({ msgtype: "exec", ticks: iterations });
             }
 
             // Process the stats
@@ -61,22 +124,36 @@ function process_message(msg) {
             break;
 
         default:
+            // Unrecognised message
             console.error("Invalid message from worker:", msg);
             break;
 
     }
 }
 
-function process_ready(data) {
-    // Set up board squares
+function worker_init(first) {
+    // Update spinner
+    spinner_message("Initialising...");
+    spinner_show(true);
+
+    // Tell worker to (re)initialise
+    worker.postMessage({ msgtype: (first ? "init" : "reinit"), jailwait: jailwait, debug: workerdebug })
+}
+
+// Set up board squares
+function setup_board(data) {
+    // Save space data
     square_desc = data.square_desc;
     square_type = data.square_type;
 
+    // Save arrival reason descriptions
+    arrival_reason_descs = data.arrival_reason_descs;
+
     for (const [index, desc] of square_desc.entries()) {
-        // Get type
+        // Get space type
         let type = square_type[index];
 
-        // Find square table cell
+        // Find space table cell
         let elem = document.getElementById(index.toString());
 
         // Calculate orientation
@@ -116,9 +193,8 @@ function process_ready(data) {
         let div = document.createElement("div");
         div.setAttribute("class", `space_div space_div_${orient} space_div_${side}`);
 
+        // Add colour block for property squares
         if (type == 'P') {
-            // Add colour block for property squares
-
             // Work out colour
             let colour = set_to_colour(desc[0]);
 
@@ -172,21 +248,28 @@ function process_ready(data) {
 
     let pause = document.getElementById("pause");
     pause.onclick = pause_click;
-    pause.style.display = "block";
 
     // Set up split jail stats button
     update_jailstats_button();
 
     let jailstats = document.getElementById("splitjail");
     jailstats.onclick = jailstats_click;
-    jailstats.style.display = "block";
 
     // Set up full leaderboard button
     update_fullboard_button();
 
     let fullboard = document.getElementById("fullboard");
     fullboard.onclick = fullboard_click;
-    fullboard.style.display = "block";
+
+    // Set up strategy button
+    update_strategy_button();
+
+    let strategy = document.getElementById("strategy");
+    strategy.onclick = strategy_click;
+
+    // Display the board
+    let main = document.getElementById("main");
+    main.style.display = "flex";
 }
 
 function create_pct_span(parent, index, sub) {
@@ -337,6 +420,12 @@ function pretty_desc(desc, type, show_elem) {
 }
 
 function process_stats(stats) {
+    // Make sure these stats are for the mode we're currently in
+    if (stats.jailwait != jailwait) {
+        console.warn("Rejecting stats for incorrect mode");
+        return;
+    }
+
     if (debug) {
         console.debug("Processing stats:", stats);
     }
@@ -400,15 +489,8 @@ function process_stats(stats) {
     };
 
     // Clear the leaderboard
-    let container = document.getElementById("leaderboard");
-    container.textContent = "";
-
-    // Create new leaderboard table
-    let table = document.createElement("table");
-    container.appendChild(table);
-
-    let tbody = document.createElement("tbody");
-    table.appendChild(tbody);
+    let tbody = document.getElementById("leaderboard");
+    tbody.textContent = "";
 
     // Get top 20 or full
     for (let i = 0; i < (full_leaderboard ? leaderboard.length : 20); i++) {
@@ -434,8 +516,31 @@ function process_stats(stats) {
             desc = pretty_desc(square_desc[elem], square_type[elem], true);
         }
 
+        // Get expected frequency
+        let expected;
+
+        if (square_type[elem] == 'g') {
+            // Go to jail
+            expected = 0;
+        } else if (square_type[elem] == 'J') {
+            // Jail
+            switch (sub) {
+                case 0: // Combined jail/just visiting
+                    expected = expected_freq[10] + expected_freq[30];
+                    break;
+                case 1: // In jail
+                    expected = expected_freq[30];
+                    break;
+                case 2: // Just visiting
+                    expected = expected_freq[10];
+                    break;
+            }
+        } else {
+            expected = expected_freq[elem];
+        }
+
         // Add leaderboard main entry
-        add_leaderboard(tbody, desc, stat, stats.moves, false, addelem)
+        add_leaderboard(tbody, desc, stat, stats.moves, false, expected, addelem)
 
         if (sub == 2) {
             // Skip reasons for just visiting
@@ -458,7 +563,7 @@ function process_stats(stats) {
                 continue;
             }
 
-            add_leaderboard(tbody, arrival_reason_desc(index), count, stat, true)
+            add_leaderboard(tbody, arrival_reason_descs[index], count, stat, true)
         }
     }
 
@@ -471,13 +576,14 @@ function process_stats(stats) {
         } else {
             return max;
         }
-    }, 0n);
+    }, 0);
 
     for (const [i, count] of rolls.entries()) {
         let index = i + 2;
-        let pct = (Number(count) / Number(stats.moves));
 
-        let barpct = (Number(count) / max) * 100;
+        let pct = percent_calc(count, stats.moves);
+        let barpct = percent_calc(count, max) * 100;
+
         let graphbar = document.getElementById(`rollgraph${index}`);
         graphbar.style.height = `${barpct}%`;
 
@@ -490,7 +596,7 @@ function process_stats(stats) {
         }
 
         let pctcell = document.getElementById(`rollpct${index}`);
-        pctcell.innerText = percentfmt(pct, 4);
+        pctcell.innerText = percent_fmt(pct, 4);
 
         let numerator;
 
@@ -504,15 +610,8 @@ function process_stats(stats) {
         let error = pct - expected;
 
         let err = document.getElementById(`rollpcterr${index}`);
-        err.innerText = percentfmt(error, 4);
-
-        if (error < 0) {
-            err.style.color = "red";
-        } else if (error > 0) {
-            err.style.color = "green";
-        } else {
-            err.style.color = "black";
-        }
+        err.innerText = percent_fmt(error, 4);
+        colour_error(err, error);
     }
 
     if (((stats.turns + BigInt(iterations)) % 100_000_000n) == 0) {
@@ -521,17 +620,27 @@ function process_stats(stats) {
     }
 }
 
+function colour_error(elem, error) {
+    if (error < 0) {
+        elem.style.color = "red";
+    } else if (error > 0) {
+        elem.style.color = "green";
+    } else {
+        elem.style.color = "black";
+    }
+}
+
 function update_stat(id, value, total) {
     let elem = document.getElementById(id);
     elem.innerText = number_formatter.format(value);
 
-    if (total) {
+    if (total !== undefined) {
         elem = document.getElementById(`${id}_pct`);
         elem.innerText = percent(value, total);
     }
 }
 
-function add_leaderboard(tbody, desc, value, total, sub, addelem) {
+function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
     // Create table row
     let tr = document.createElement("tr");
 
@@ -578,41 +687,48 @@ function add_leaderboard(tbody, desc, value, total, sub, addelem) {
     td = document.createElement("td");
 
     td.setAttribute("class", "statpct");
-    td.innerText = percent(value, total, 3);
+    let pct = percent_calc(value, total);
+    td.innerText = percent_fmt(pct, 3);
 
     tr.appendChild(td);
-}
 
-function arrival_reason_desc(index) {
-    // Convert arrival reason to string
-    switch (index) {
-        case 0:
-            return "Chance Card";
-        case 1:
-            return "Community Chest Card";
-        case 2:
-            return "Go to Jail";
-        case 3:
-            return "Triple Double";
+    if (expected !== undefined) {
+        // Create expected cell
+        td = document.createElement("td");
+
+        td.setAttribute("class", "statpct");
+        td.innerText = percent_fmt(expected, 3);
+
+        tr.appendChild(td);
+
+        // Create error cell
+        td = document.createElement("td");
+
+        td.setAttribute("class", "statpct");
+        let error = pct - expected;
+        td.innerText = percent_fmt(error, 3);
+        colour_error(td, error);
+
+        tr.appendChild(td);
     }
-
-    return "<Unknown>";
 }
+
+// Percentage calculation and display
 
 function percent(value, total, dp) {
     // Return locale specific percentage
-    let percentage;
-
-    if (total == 0) {
-        percentage = 0;
-    } else {
-        percentage = Number(value) / Number(total);
-    }
-
-    return percentfmt(percentage, dp);
+    return percent_fmt(percent_calc(value, total), dp);
 }
 
-function percentfmt(value, dp) {
+function percent_calc(value, total) {
+    if (total == 0) {
+        return 0;
+    } else {
+        return Number(value) / Number(total);
+    }
+}
+
+function percent_fmt(value, dp) {
     dp = dp || 2;
 
     let formatter = percent_formatters[dp];
@@ -625,6 +741,31 @@ function percentfmt(value, dp) {
     return formatter.format(value);
 }
 
+// Loading spinner
+
+function spinner_message(msg) {
+    let elem = document.getElementById("spinnermsg");
+    elem.innerText = msg;
+}
+
+function spinner_show(visible) {
+    if (visible != spinner) {
+        let elem = document.getElementById("loading");
+
+        if (visible) {
+            elem.style.display = "";
+            document.body.style.overflow = "hidden";
+        } else {
+            elem.style.display = "none";
+            document.body.style.overflow = "";
+        }
+
+        spinner = visible;
+    }
+}
+
+// Pause/Play button
+
 function pause_click() {
     // Pause/play button click handler
     paused = !paused;
@@ -632,7 +773,7 @@ function pause_click() {
     update_pause_button();
 
     if (!paused) {
-        worker.postMessage({ msgtype: "execute", ticks: iterations });
+        worker.postMessage({ msgtype: "exec", ticks: iterations });
     }
 }
 
@@ -646,6 +787,8 @@ function update_pause_button() {
         pause.innerText = "▶ Play";
     }
 }
+
+// Combined Jail/Just Visiting control
 
 function jailstats_click() {
     // Jail stats button click handler
@@ -680,6 +823,8 @@ function update_jailstats_button() {
     }
 }
 
+// Full leaderboard control
+
 function fullboard_click() {
     // Full leaderboard button click handler
     full_leaderboard = !full_leaderboard;
@@ -699,5 +844,34 @@ function update_fullboard_button() {
 
     if (last_stats) {
         process_stats(last_stats);
+    }
+}
+
+// Strategy control
+
+function strategy_click() {
+    // Strategy button click handler
+    jailwait = !jailwait;
+
+    update_strategy_button();
+
+    if (paused) {
+        // Unpause
+        paused = false;
+        update_pause_button();
+    }
+
+    // Re-initialise
+    worker_init(false);
+}
+
+function update_strategy_button() {
+    // Update strategy button
+    let btn = document.getElementById("strategy");
+
+    if (jailwait) {
+        btn.innerText = "Pay to Exit Jail";
+    } else {
+        btn.innerText = "Roll to Exit Jail";
     }
 }

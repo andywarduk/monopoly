@@ -1,4 +1,10 @@
-use monopoly_lib::{Board, Space};
+use monopoly_lib::{
+    calc::transmatrix::TransMatrix,
+    sim::{Board, movereason::MoveReason},
+    space::{SPACES, Space},
+    strategy::Strategy,
+};
+use strum::IntoEnumIterator;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -10,6 +16,7 @@ pub struct WasmBoard {
 pub struct WasmStats {
     pub turns: u64,
     pub moves: u64,
+    pub jailwait: bool,
 }
 
 #[wasm_bindgen]
@@ -22,8 +29,7 @@ impl WasmBoard {
     }
 
     pub fn get_squares_desc(&self) -> Vec<String> {
-        self.board
-            .spaces()
+        SPACES
             .iter()
             .map(|s| match s {
                 Space::Go => "Go".to_string(),
@@ -51,8 +57,7 @@ impl WasmBoard {
     }
 
     pub fn get_squares_type(&self) -> Vec<String> {
-        self.board
-            .spaces()
+        SPACES
             .iter()
             .map(|s| match s {
                 Space::Go => 'G',
@@ -82,6 +87,7 @@ impl WasmBoard {
         WasmStats {
             turns: self.board.turns(),
             moves: self.board.moves(),
+            jailwait: self.board.strategy() == Strategy::JailWait,
         }
     }
 
@@ -97,14 +103,33 @@ impl WasmBoard {
         self.board.arrival_reasons(elem).to_vec()
     }
 
+    pub fn get_arrival_reason_descs(&self) -> Vec<String> {
+        MoveReason::iter()
+            .filter_map(|r| if r.clone() as isize >= 0 { Some(r.to_string()) } else { None })
+            .collect()
+    }
+
     pub fn get_rollfreq(&self) -> Vec<u64> {
         self.board.rollfreq().to_vec()
     }
 }
 
 #[wasm_bindgen]
-pub fn create_board() -> WasmBoard {
+pub fn create_board(jailwait: bool) -> WasmBoard {
+    // Create board with requested strategy, cards pulled at random
     WasmBoard {
-        board: Board::default(),
+        board: Board::new(if jailwait { Strategy::JailWait } else { Strategy::PayJail }, true),
     }
+}
+
+#[wasm_bindgen]
+pub fn get_expected_frequencies(jailwait: bool) -> Vec<f64> {
+    // Build probability matrices
+    let transmatrix = TransMatrix::new(if jailwait { Strategy::JailWait } else { Strategy::PayJail }, 6, false);
+
+    // Get the steady state matrix
+    let (_, mat) = transmatrix.steady_summary(|state| Some(state.position));
+
+    // Convert to vector
+    mat.into_iter().copied().collect()
 }
