@@ -28,3 +28,9 @@ rust and cargo need to be installed to run this version.
 cd monopoly-tui
 cargo run --release
 ```
+
+## Credits ##
+
+[http://www.tkcs-collins.com/truman/monopoly/monopoly.shtml](http://www.tkcs-collins.com/truman/monopoly/monopoly.shtml)
+
+[https://www.diva-portal.org/smash/get/diva2:1471765/FULLTEXT01.pdf](https://www.diva-portal.org/smash/get/diva2:1471765/FULLTEXT01.pdf)
