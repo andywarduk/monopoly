@@ -706,7 +706,7 @@ function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
 
         td.setAttribute("class", "statpct");
         let error = pct - expected;
-        td.innerText = percent_fmt(error, 3);
+        td.innerText = percent_fmt(error, 4);
         colour_error(td, error);
 
         tr.appendChild(td);
