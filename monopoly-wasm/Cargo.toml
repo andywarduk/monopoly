@@ -6,7 +6,7 @@ authors = ["Andrew Ward (andy.ward.uk@gmail.com)"]
 description = "Monopoly probability WASM web application"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 monopoly-lib = { path = "../monopoly-lib" }

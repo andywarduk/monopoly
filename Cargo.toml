@@ -1,0 +1,10 @@
+[workspace]
+resolver = "3"
+
+members = [
+    "monopoly-lib",
+    "monopoly-tui",
+    "monopoly-wasm",
+    "monopoly-wasm/package",
+    "monopoly-calc",
+]

@@ -17,7 +17,7 @@ then
 fi
 
 # Package in to the single directory
-./package/target/release/package --single template/index.htm single
+../target/release/package --single template/index.htm .
 
 if [ $? -ne 0 ]
 then
@@ -25,7 +25,7 @@ then
 fi
 
 # Print file details
-ls -l single/index.htm
+ls -l index.htm
 
 # Open the generated file
-./LaunchURL.sh single/index.htm
+./LaunchURL.sh index.htm

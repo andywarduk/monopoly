@@ -12,7 +12,7 @@ cd monopoly-wasm
 ./Build.sh
 ```
 
-To build a stand alone html page (single/index.htm) and open in the default browser:
+To build a stand alone html page (index.htm) and open in the default browser:
 ```bash
 cd monopoly-wasm
 ./BuildSingle.sh
@@ -25,9 +25,18 @@ cd monopoly-wasm
 rust and cargo need to be installed to run this version.
 
 ```bash
-cd monopoly-tui
-cargo run --release
+cargo run --bin monopoly-tui --release
 ```
+
+## Viewing probability matrices: ##
+
+Run the following:
+
+```bash
+cargo run --bin monopoly-calc --release
+```
+
+csv files are put in 'csv' directory and a probabilities.xlsx is produced.
 
 ## Credits ##
 

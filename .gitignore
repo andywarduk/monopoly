@@ -2,3 +2,5 @@ target/
 perf.data*
 .DS_Store
 *.bak
+csv/
+*.xlsx
