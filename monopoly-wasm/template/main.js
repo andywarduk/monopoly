@@ -21,6 +21,10 @@ let square_desc;
 // Type of each space
 let square_type;
 
+// Index of needed squares
+let square_visit;
+let square_g2j;
+
 // Arrival reason element descriptions
 let arrival_reason_descs;
 
@@ -146,15 +150,18 @@ function setup_board(data) {
     square_desc = data.square_desc;
     square_type = data.square_type;
 
+    square_visit = square_type.findIndex((s) => s == 'J');
+    square_g2j = square_type.findIndex((s) => s == 'g');
+
     // Save arrival reason descriptions
     arrival_reason_descs = data.arrival_reason_descs;
 
     for (const [index, desc] of square_desc.entries()) {
         // Get space type
-        let type = square_type[index];
+        const type = square_type[index];
 
         // Find space table cell
-        let elem = document.getElementById(index.toString());
+        const elem = document.getElementById(index.toString());
 
         // Calculate orientation
         let orient;
@@ -187,19 +194,19 @@ function setup_board(data) {
         }
 
         // Create divs
-        let reldiv = document.createElement("div");
+        const reldiv = document.createElement("div");
         reldiv.setAttribute("class", `space_reldiv space_reldiv_${orient} space_reldiv_${side}`);
 
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.setAttribute("class", `space_div space_div_${orient} space_div_${side}`);
 
         // Add colour block for property squares
         if (type == 'P') {
             // Work out colour
-            let colour = set_to_colour(desc[0]);
+            const colour = set_to_colour(desc[0]);
 
             // Add the div
-            let colourdiv = document.createElement("div");
+            const colourdiv = document.createElement("div");
 
             colourdiv.setAttribute("class", "colour_block");
             colourdiv.setAttribute("style", `background-color: ${colour};`);
@@ -208,9 +215,9 @@ function setup_board(data) {
         }
 
         // Create description paragraph
-        let descpara = document.createElement("p");
+        const descpara = document.createElement("p");
 
-        let pretty = pretty_desc(desc, type);
+        const pretty = pretty_desc(desc, type);
 
         descpara.setAttribute("class", "propname");
         descpara.innerHTML = pretty;
@@ -221,7 +228,7 @@ function setup_board(data) {
         let icon = type_to_icon(type);
 
         if (icon) {
-            let iconspan = document.createElement("p");
+            const iconspan = document.createElement("p");
 
             iconspan.setAttribute("class", "icon");
             iconspan.innerHTML = icon;
@@ -246,35 +253,35 @@ function setup_board(data) {
     // Set up pause/play button
     update_pause_button();
 
-    let pause = document.getElementById("pause");
+    const pause = document.getElementById("pause");
     pause.onclick = pause_click;
 
     // Set up split jail stats button
     update_jailstats_button();
 
-    let jailstats = document.getElementById("splitjail");
+    const jailstats = document.getElementById("splitjail");
     jailstats.onclick = jailstats_click;
 
     // Set up full leaderboard button
     update_fullboard_button();
 
-    let fullboard = document.getElementById("fullboard");
+    const fullboard = document.getElementById("fullboard");
     fullboard.onclick = fullboard_click;
 
     // Set up strategy button
     update_strategy_button();
 
-    let strategy = document.getElementById("strategy");
+    const strategy = document.getElementById("strategy");
     strategy.onclick = strategy_click;
 
     // Display the board
-    let main = document.getElementById("main");
+    const main = document.getElementById("main");
     main.style.display = "flex";
 }
 
 function create_pct_span(parent, index, sub) {
-    let pctdiv = document.createElement("div");
-    let pctspan = document.createElement("span");
+    const pctdiv = document.createElement("div");
+    const pctspan = document.createElement("span");
 
     let id;
 
@@ -432,11 +439,11 @@ function process_stats(stats) {
 
     // Update game statistics
     //                2 rolls            3 rolls                   3 rolls (goes to jail on 3rd roll)
-    let doubles_tot = stats.doubles[0] + (2n * stats.doubles[1]) + (3n * stats.doubles[2]);
+    const doubles_tot = stats.doubles[0] + (2n * stats.doubles[1]) + (3n * stats.doubles[2]);
 
-    let double_turns = stats.doubles[0];
-    let triple_turns = stats.doubles[1] + stats.doubles[2];
-    let single_turns = stats.turns - (double_turns + triple_turns);
+    const double_turns = stats.doubles[0];
+    const triple_turns = stats.doubles[1] + stats.doubles[2];
+    const single_turns = stats.turns - (double_turns + triple_turns);
 
     update_stat("stat_turns", stats.turns);
 
@@ -453,24 +460,37 @@ function process_stats(stats) {
     // Calculate leaderboard
     let leaderboard = [];
 
+    // Rank the spaces by arrivals
     for (const [index, arrivals] of stats.arrivals.entries()) {
-        if (split_just_visiting && square_type[index] == 'J') {
-            let reasons = stats.reasons[index];
+        switch (square_type[index]) {
+            case 'J': // Just visiting
+                if (split_just_visiting) {
+                    leaderboard.push([index, arrivals, 2]);
+                }
 
-            let jail = reasons.reduce((a, b) => a + b, 0n);
-            let visits = arrivals - jail;
+                break;
+            case 'g': // Go to Jail
+                leaderboard.push([index, 0n, 0]);
 
-            leaderboard.push([index, visits, 2]);
-            leaderboard.push([index, jail, 1]);
-        } else {
-            leaderboard.push([index, arrivals, 0]);
+                if (split_just_visiting) {
+                    // Jail (visit sub 2)
+                    leaderboard.push([square_visit, arrivals, 1]);
+                } else {
+                    // Combined jail + just visiting
+                    leaderboard.push([square_visit, arrivals + stats.arrivals[square_visit], 0]);
+                }
+
+                break;
+            default:
+                leaderboard.push([index, arrivals, 0]);
         }
     };
 
+    // Sort by arrivals
     leaderboard.sort(([_ia, aa, _sa], [_ib, ab, _sb]) => Number(ab - aa));
 
-    // Draw percentages on board squares
-    let split = 180 / leaderboard.length;
+    // Draw colour ranked percentages on board squares
+    const split = 180 / leaderboard.length;
 
     for (const [rank, [index, arrivals, sub]] of leaderboard.entries()) {
         let id;
@@ -481,33 +501,32 @@ function process_stats(stats) {
             id = `pct${index}-${sub}`;
         }
 
-        let elem = document.getElementById(id);
-        let colour = `hsl(${rank * split}, 100%, 60%)`;
+        const elem = document.getElementById(id);
+        const colour = `hsl(${rank * split}, 100%, 60%)`;
 
         elem.style.backgroundColor = colour;
         elem.innerText = percent(arrivals, stats.moves);
     };
 
     // Clear the leaderboard
-    let tbody = document.getElementById("leaderboard");
+    const tbody = document.getElementById("leaderboard");
     tbody.textContent = "";
 
     // Get top 20 or full
     for (let i = 0; i < (full_leaderboard ? leaderboard.length : 20); i++) {
-        let elem = leaderboard[i][0];
-        let stat = leaderboard[i][1];
-        let sub = leaderboard[i][2];
-
-        let addelem;
+        const [elem, stat, sub] = leaderboard[i];
 
         // Create colour swatch for properties
+        let addelem;
+
         if (square_type[elem] == 'P') {
-            let colour = set_to_colour(square_desc[elem][0]);
+            const colour = set_to_colour(square_desc[elem][0]);
             addelem = document.createElement("span");
             addelem.setAttribute("class", "colsample");
             addelem.setAttribute("style", `background-color: ${colour}`);
         }
 
+        // Get space description
         let desc;
 
         if (sub == 2) {
@@ -526,13 +545,13 @@ function process_stats(stats) {
             // Jail
             switch (sub) {
                 case 0: // Combined jail/just visiting
-                    expected = expected_freq[10] + expected_freq[30];
+                    expected = expected_freq[square_visit] + expected_freq[square_g2j];
                     break;
                 case 1: // In jail
-                    expected = expected_freq[30];
+                    expected = expected_freq[square_g2j];
                     break;
                 case 2: // Just visiting
-                    expected = expected_freq[10];
+                    expected = expected_freq[square_visit];
                     break;
             }
         } else {
@@ -542,18 +561,22 @@ function process_stats(stats) {
         // Add leaderboard main entry
         add_leaderboard(tbody, desc, stat, stats.moves, false, expected, addelem)
 
-        if (sub == 2) {
-            // Skip reasons for just visiting
-            continue;
-        }
-
         // Get arrival reasons
-        let reasons = stats.reasons[elem];
+        let reasons;
+
+        if (square_type[elem] == 'J' && sub !== 2) {
+            // Get reasons from go to jail for jail
+            reasons = stats.reasons[square_g2j];
+        } else if (square_type[elem] == 'g') {
+            // No reasons for actual go to jail
+            reasons = [];
+        } else {
+            reasons = stats.reasons[elem];
+        }
 
         // Special handling for Just Visiting for Jail space
         if (!split_just_visiting && square_type[elem] == 'J') {
-            let visits = stat - reasons.reduce((a, b) => a + b, 0n);
-            add_leaderboard(tbody, "Just Visiting", visits, stat, true)
+            add_leaderboard(tbody, "Just Visiting", stats.arrivals[square_visit], stat, true);
         }
 
         // Add arrival reasons
@@ -568,9 +591,10 @@ function process_stats(stats) {
     }
 
     // Roll frequencies
-    let rolls = stats.rollfreq;
+    const rolls = stats.rollfreq;
 
-    let max = rolls.reduce((max, r) => {
+    // Calculate maximum number of rolls
+    const max_rolsl = rolls.reduce((max, r) => {
         if (r > max) {
             return Number(r);
         } else {
@@ -579,14 +603,17 @@ function process_stats(stats) {
     }, 0);
 
     for (const [i, count] of rolls.entries()) {
-        let index = i + 2;
+        const dice_sum = i + 2;
 
-        let pct = percent_calc(count, stats.moves);
-        let barpct = percent_calc(count, max) * 100;
+        // Calculate percentages
+        const pct = percent_calc(count, stats.moves);
+        const barpct = percent_calc(count, max_rolsl) * 100;
 
-        let graphbar = document.getElementById(`rollgraph${index}`);
+        // Size bar chart bar
+        const graphbar = document.getElementById(`rollgraph${dice_sum}`);
         graphbar.style.height = `${barpct}%`;
 
+        // Sort out bar borders
         if (i < 11 && count < rolls[i + 1]) {
             graphbar.style.borderRight = "0px";
         }
@@ -595,54 +622,77 @@ function process_stats(stats) {
             graphbar.style.borderLeft = "0px";
         }
 
-        let pctcell = document.getElementById(`rollpct${index}`);
+        // Draw percentage
+        const pctcell = document.getElementById(`rollpct${dice_sum}`);
         pctcell.innerText = percent_fmt(pct, 4);
 
+        // Calculat expected
         let numerator;
 
-        if (index <= 7) {
-            numerator = index - 1;
+        if (dice_sum <= 7) {
+            numerator = dice_sum - 1;
         } else {
-            numerator = 13 - index;
+            numerator = 13 - dice_sum;
         }
 
-        let expected = numerator / 36;
-        let error = pct - expected;
+        const expected = numerator / 36;
 
-        let err = document.getElementById(`rollpcterr${index}`);
+        // Calculate error
+        const error = pct - expected;
+
+        // Draw error
+        const err = document.getElementById(`rollpcterr${dice_sum}`);
         err.innerText = percent_fmt(error, 4);
-        colour_error(err, error);
+        colour_error(err, error, 6);
     }
 
+    // Auto-pause at 100,000,000
     if (((stats.turns + BigInt(iterations)) % 100_000_000n) == 0) {
-        // Auto-pause at 100,000,000
         pause_click();
     }
 }
 
-function colour_error(elem, error) {
-    if (error < 0) {
-        elem.style.color = "red";
-    } else if (error > 0) {
-        elem.style.color = "green";
-    } else {
-        elem.style.color = "black";
+function roundnum(num, dp) {
+    let mult = Math.pow(10, dp);
+    let result = Math.round((num + Number.EPSILON) * mult) / mult;
+
+    if (result === 0) {
+        // Turn negative zero in to positive zero
+        return 0
+    }
+
+    return result;
+}
+
+function colour_error(elem, error, dp) {
+    let rnderr = roundnum(error, dp);
+
+    switch (Math.sign(rnderr)) {
+        case -1:
+            elem.style.color = "red";
+            break;
+        case 0:
+            elem.style.color = "black";
+            break;
+        case 1:
+            elem.style.color = "green";
+            break;
     }
 }
 
 function update_stat(id, value, total) {
-    let elem = document.getElementById(id);
+    const elem = document.getElementById(id);
     elem.innerText = number_formatter.format(value);
 
     if (total !== undefined) {
-        elem = document.getElementById(`${id}_pct`);
-        elem.innerText = percent(value, total);
+        const telem = document.getElementById(`${id}_pct`);
+        telem.innerText = percent(value, total);
     }
 }
 
 function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
     // Create table row
-    let tr = document.createElement("tr");
+    const tr = document.createElement("tr");
 
     if (sub) {
         // Sub stat - add class
@@ -663,14 +713,9 @@ function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
 
         // Add additional element
         td.appendChild(addelem);
-
-        // Add colon
-        span = document.createElement("span");
-        span.innerHTML = ":";
-        td.appendChild(span);
     } else {
-        // Add text with colon
-        td.innerHTML = `${desc}:`;
+        // Add text
+        td.innerHTML = desc;
     }
 
     tr.appendChild(td);
@@ -687,7 +732,7 @@ function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
     td = document.createElement("td");
 
     td.setAttribute("class", "statpct");
-    let pct = percent_calc(value, total);
+    const pct = percent_calc(value, total);
     td.innerText = percent_fmt(pct, 3);
 
     tr.appendChild(td);
@@ -705,9 +750,9 @@ function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
         td = document.createElement("td");
 
         td.setAttribute("class", "statpct");
-        let error = pct - expected;
+        const error = pct - expected;
         td.innerText = percent_fmt(error, 4);
-        colour_error(td, error);
+        colour_error(td, error, 6);
 
         tr.appendChild(td);
     }
@@ -738,19 +783,19 @@ function percent_fmt(value, dp) {
         percent_formatters[dp] = formatter;
     }
 
-    return formatter.format(value);
+    return formatter.format(roundnum(value, dp + 2));
 }
 
 // Loading spinner
 
 function spinner_message(msg) {
-    let elem = document.getElementById("spinnermsg");
+    const elem = document.getElementById("spinnermsg");
     elem.innerText = msg;
 }
 
 function spinner_show(visible) {
     if (visible != spinner) {
-        let elem = document.getElementById("loading");
+        const elem = document.getElementById("loading");
 
         if (visible) {
             elem.style.display = "";
@@ -779,7 +824,7 @@ function pause_click() {
 
 function update_pause_button() {
     // Update pause/play button
-    let pause = document.getElementById("pause");
+    const pause = document.getElementById("pause");
 
     if (!paused) {
         pause.innerText = "⏸︎ Pause";
@@ -799,9 +844,9 @@ function jailstats_click() {
 
 function update_jailstats_button() {
     // Update jail stats button
-    let btn = document.getElementById("splitjail");
+    const btn = document.getElementById("splitjail");
 
-    let index = square_type.findIndex((e) => e == 'J');
+    const index = square_type.findIndex((e) => e == 'J');
 
     if (split_just_visiting) {
         btn.innerText = "Combine Just Visiting";
@@ -834,7 +879,7 @@ function fullboard_click() {
 
 function update_fullboard_button() {
     // Update full leaderboard button
-    let btn = document.getElementById("fullboard");
+    const btn = document.getElementById("fullboard");
 
     if (full_leaderboard) {
         btn.innerText = "Top 15 Only";
@@ -867,7 +912,7 @@ function strategy_click() {
 
 function update_strategy_button() {
     // Update strategy button
-    let btn = document.getElementById("strategy");
+    const btn = document.getElementById("strategy");
 
     if (jailwait) {
         btn.innerText = "Pay to Exit Jail";

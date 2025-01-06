@@ -192,14 +192,14 @@ impl TransMatrix {
                             // Wait in jail
                             if double {
                                 // Rolled a double, move from just visting, do not get another go
-                                State::new(0, Space::find(Space::Jail) + sum as usize, 0)
+                                State::new(0, Space::find(Space::Visit) + sum as usize, 0)
                             } else {
                                 // Did not roll a double
                                 let jailrolls = start.jailroll + 1;
 
                                 if jailrolls == 3 {
                                     // Rolled 3 times - move to just visiting
-                                    State::new(0, Space::find(Space::Jail), 0)
+                                    State::new(0, Space::find(Space::Visit), 0)
                                 } else {
                                     State::new(0, Space::find(Space::GoToJail), jailrolls)
                                 }
@@ -207,7 +207,7 @@ impl TransMatrix {
                         }
                         Strategy::PayJail => {
                             // Pay to get out of jail
-                            State::new(if double { 1 } else { 0 }, Space::find(Space::Jail) + sum as usize, 0)
+                            State::new(if double { 1 } else { 0 }, Space::find(Space::Visit) + sum as usize, 0)
                         }
                     }
                 } else {

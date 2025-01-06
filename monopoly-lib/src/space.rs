@@ -3,7 +3,7 @@ use strum::Display;
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Space {
     Go,
-    Jail,
+    Visit,
     FreeParking,
     GoToJail,
     Property(u8, u8),
@@ -18,7 +18,7 @@ impl Space {
     pub fn shortdesc(&self) -> String {
         match self {
             Go => "Go".to_string(),
-            Jail => "Jail".to_string(),
+            Visit => "Jail".to_string(),
             FreeParking => "Free".to_string(),
             GoToJail => "ToJail".to_string(),
             Property(set, i) => format!("{}{}", (set + b'A') as char, i + 1),
@@ -32,7 +32,7 @@ impl Space {
 
     pub fn set(&self) -> PropertySet {
         match self {
-            Go | Jail | FreeParking | GoToJail => PropertySet::Other,
+            Go | Visit | FreeParking | GoToJail => PropertySet::Other,
             Property(set, _) => match *set {
                 0 => PropertySet::Brown,
                 1 => PropertySet::LightBlue,
@@ -96,7 +96,7 @@ pub const SPACES: [Space; 40] = [
     Chance(0),
     Property(1, 1),
     Property(1, 2),
-    Jail,
+    Visit,
     Property(2, 0),
     Utility(0),
     Property(2, 1),

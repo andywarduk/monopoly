@@ -8,14 +8,14 @@ use clap::Parser;
 use cli::Cli;
 use crossterm::{
     cursor,
-    event::{self, poll, Event, KeyCode, KeyEvent, KeyEventKind},
+    event::{self, Event, KeyCode, KeyEvent, KeyEventKind, poll},
     execute, queue,
     style::{self, Color, Colors},
     terminal::{self, ClearType},
     tty::IsTty,
 };
 
-use monopoly_lib::{sim::movereason::MoveReason, sim::Board, space::SPACES};
+use monopoly_lib::{sim::Board, sim::movereason::MoveReason, space::SPACES};
 use monopoly_lib::{space::Space, strategy::Strategy};
 use num_traits::{FromPrimitive, Num, NumCast};
 use numformat::NumFormat;
@@ -278,25 +278,29 @@ where
         draw_square(XPAD + ((i + 1) * XSPACE), YPAD + (10 * YSPACE), elem)?;
     }
 
-    // Left column
-    for i in 0..10 {
+    // Left column (excluding go to jail)
+    for i in 0..9 {
         let elem = (39 - i) as usize;
         draw_square(XPAD, YPAD + ((i + 1) * YSPACE), elem)?;
     }
 
+    let visit_elem = Space::find(Space::Visit);
+    let g2j_elem = Space::find(Space::GoToJail);
+
+    let jail = board.arrivals_on(g2j_elem);
+    let visit = board.arrivals_on(visit_elem);
+
     if split_jail {
         // Split jail & Just visiting
-        let elem = 10;
-
-        let jail = board.arrival_reasons(elem).iter().sum::<u64>();
-        let visit = board.arrivals_on(elem) - jail;
-
-        draw_square_int(XPAD + (10 * XSPACE), YPAD, "VISIT".to_string(), visit, &SPACES[elem])?;
-        draw_square_int(XPAD + (9 * XSPACE), YPAD + YSPACE, "JAIL".to_string(), jail, &SPACES[elem])?;
+        draw_square_int(XPAD + (10 * XSPACE), YPAD, "VISIT".to_string(), visit, &SPACES[visit_elem])?;
+        draw_square_int(XPAD + (9 * XSPACE), YPAD + YSPACE, "JAIL".to_string(), jail, &SPACES[visit_elem])?;
     } else {
         // Combined jail
-        draw_square(XPAD + (10 * XSPACE), YPAD, 10)?;
+        draw_square_int(XPAD + (10 * XSPACE), YPAD, "JAIL".to_string(), visit + jail, &SPACES[visit_elem])?;
     }
+
+    // Draw go to jail
+    draw_square_int(XPAD, YPAD + (10 * YSPACE), "G2J".to_string(), 0, &SPACES[30])?;
 
     Ok(())
 }
@@ -356,26 +360,25 @@ where
 
     blank_line(w, &mut y)?;
 
+    let g2j = Space::find(Space::GoToJail);
+    let visit = Space::find(Space::Visit);
+
     let mut sorted = if split_jail {
         board
             .arrivals()
             .iter()
             .enumerate()
-            .flat_map(|(i, a)| {
-                if SPACES[i] == Space::Jail {
-                    let jail = board.arrival_reasons(i).iter().sum::<u64>();
-
-                    vec![
-                        (jail, i, 1),     // Jail
-                        (a - jail, i, 2), // Just visiting
-                    ]
-                } else {
-                    vec![(*a, i, 0)]
-                }
+            .map(|(i, a)| match SPACES[i] {
+                Space::Visit => (*a, i, 2),                            // Just visiting
+                Space::GoToJail => (*a, Space::find(Space::Visit), 1), // Jail
+                _ => (*a, i, 0),
             })
             .collect::<Vec<_>>()
     } else {
-        board.arrivals().iter().enumerate().map(|(i, a)| (*a, i, 0)).collect::<Vec<_>>()
+        let mut vec = board.arrivals().iter().enumerate().map(|(i, a)| (*a, i, 0)).collect::<Vec<_>>();
+        vec[visit].0 += vec[g2j].0;
+        vec.swap_remove(g2j);
+        vec
     };
 
     sorted.sort();
@@ -386,19 +389,22 @@ where
 
         queue!(w, style::SetAttribute(style::Attribute::Dim),)?;
 
-        if !split_jail && SPACES[elem] == Space::Jail {
-            // Special for jail - show % for just visiting
-            let visiting = board.arrivals_on(elem) - board.arrival_reasons(elem).iter().sum::<u64>();
+        let arrivals_elem = if SPACES[elem] == Space::Visit {
+            match sub {
+                0 => {
+                    // Combined jail
+                    draw_stat_pct(w, &mut y, &format!("  {}", "Visiting"), board.arrivals_on(elem), a, 2)?;
+                    g2j
+                }
+                1 => g2j,  // Jail (split)
+                2 => elem, // Just visiting (split)
+                _ => panic!("Invalid sub"),
+            }
+        } else {
+            elem
+        };
 
-            draw_stat_pct(w, &mut y, &format!("  {}", "Visiting"), visiting, a, 2)?;
-        }
-
-        if sub == 2 {
-            // Skip for just visiting
-            continue;
-        }
-
-        for (reason, count) in board.arrival_reasons(elem).iter().enumerate() {
+        for (reason, count) in board.arrival_reasons(arrivals_elem).iter().enumerate() {
             if *count != 0 {
                 draw_stat_pct(w, &mut y, &format!("  {}", MoveReason::from_usize(reason).unwrap()), *count, a, 2)?;
             }
@@ -415,17 +421,13 @@ where
 fn percent<I: Num + NumCast>(value: I, total: I) -> f64 {
     let total = total.to_f64().unwrap();
 
-    if total == 0.0 {
-        0.0
-    } else {
-        (value.to_f64().unwrap() * 100.0) / total
-    }
+    if total == 0.0 { 0.0 } else { (value.to_f64().unwrap() * 100.0) / total }
 }
 
 fn space_desc(elem: usize) -> String {
     match SPACES[elem] {
         Space::Go => "GO".to_string(),
-        Space::Jail => "JAIL".to_string(),
+        Space::Visit => "JAIL".to_string(),
         Space::FreeParking => "FREE".to_string(),
         Space::GoToJail => "GO2J".to_string(),
         Space::Property(set, n) => {

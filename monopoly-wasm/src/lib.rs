@@ -33,7 +33,7 @@ impl WasmBoard {
             .iter()
             .map(|s| match s {
                 Space::Go => "Go".to_string(),
-                Space::Jail => "Jail".to_string(),
+                Space::Visit => "Jail".to_string(),
                 Space::FreeParking => "Free Parking".to_string(),
                 Space::GoToJail => "Go to Jail".to_string(),
                 Space::Property(set, n) => {
@@ -61,7 +61,7 @@ impl WasmBoard {
             .iter()
             .map(|s| match s {
                 Space::Go => 'G',
-                Space::Jail => 'J',
+                Space::Visit => 'J',
                 Space::FreeParking => 'F',
                 Space::GoToJail => 'g',
                 Space::Property(_, _) => 'P',

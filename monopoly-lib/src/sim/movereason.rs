@@ -9,6 +9,7 @@ pub enum MoveReason {
     GoToJail = 2,     // Go to jail space
     TripleDouble = 3, // Triple double rolled
     NoDouble = 4,     // In jail and not rolled a double
+    ExitJail = 5,     // Exited jail
 }
 
 impl std::fmt::Display for MoveReason {
@@ -20,6 +21,7 @@ impl std::fmt::Display for MoveReason {
             MoveReason::GoToJail => f.write_str("Go to Jail"),
             MoveReason::TripleDouble => f.write_str("Triple Double"),
             MoveReason::NoDouble => f.write_str("Double Not Rolled"),
+            MoveReason::ExitJail => f.write_str("Released from Jail"),
         }
     }
 }
