@@ -86,8 +86,8 @@ function initialise(msg) {
 
     if (msg.msgtype == "init") {
         // Send extra data back for first initialise
-        ret.square_desc = board.get_squares_desc();
-        ret.square_type = board.get_squares_type();
+        ret.spaces_desc = board.get_spaces_desc();
+        ret.spaces_type = board.get_spaces_type();
         ret.arrival_reason_descs = board.get_arrival_reason_descs();
     }
 

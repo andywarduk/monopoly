@@ -16,14 +16,14 @@ let full_leaderboard = false;
 let worker;
 
 // Description of each space
-let square_desc;
+let space_codes;
 
 // Type of each space
-let square_type;
+let space_types;
 
-// Index of needed squares
-let square_visit;
-let square_g2j;
+// Index of needed spaces
+let space_visit;
+let space_g2j;
 
 // Arrival reason element descriptions
 let arrival_reason_descs;
@@ -144,110 +144,22 @@ function worker_init(first) {
     worker.postMessage({ msgtype: (first ? "init" : "reinit"), jailwait: jailwait, debug: workerdebug })
 }
 
-// Set up board squares
+// Set up board spacess
 function setup_board(data) {
     // Save space data
-    square_desc = data.square_desc;
-    square_type = data.square_type;
+    space_codes = data.spaces_desc;
+    space_types = data.spaces_type;
 
-    square_visit = square_type.findIndex((s) => s == 'J');
-    square_g2j = square_type.findIndex((s) => s == 'g');
+    space_visit = space_types.findIndex((s) => s == 'J');
+    space_g2j = space_types.findIndex((s) => s == 'g');
 
     // Save arrival reason descriptions
     arrival_reason_descs = data.arrival_reason_descs;
 
-    for (const [index, desc] of square_desc.entries()) {
-        // Get space type
-        const type = square_type[index];
-
-        // Find space table cell
-        const elem = document.getElementById(index.toString());
-
-        // Calculate orientation
-        let orient;
-        let side;
-
-        if (index == 0) {
-            orient = "nw";
-            side = "c";
-        } else if (index < 10) {
-            orient = "n";
-            side = "tb";
-        } else if (index == 10) {
-            orient = "ne";
-            side = "c";
-        } else if (index < 20) {
-            orient = "e";
-            side = "lr";
-        } else if (index == 20) {
-            orient = "se";
-            side = "c";
-        } else if (index < 30) {
-            orient = "s";
-            side = "tb";
-        } else if (index == 30) {
-            orient = "sw";
-            side = "c";
-        } else {
-            orient = "w";
-            side = "lr";
-        }
-
-        // Create divs
-        const reldiv = document.createElement("div");
-        reldiv.setAttribute("class", `space_reldiv space_reldiv_${orient} space_reldiv_${side}`);
-
-        const div = document.createElement("div");
-        div.setAttribute("class", `space_div space_div_${orient} space_div_${side}`);
-
-        // Add colour block for property squares
-        if (type == 'P') {
-            // Work out colour
-            const colour = set_to_colour(desc[0]);
-
-            // Add the div
-            const colourdiv = document.createElement("div");
-
-            colourdiv.setAttribute("class", "colour_block");
-            colourdiv.setAttribute("style", `background-color: ${colour};`);
-
-            div.appendChild(colourdiv);
-        }
-
-        // Create description paragraph
-        const descpara = document.createElement("p");
-
-        const pretty = pretty_desc(desc, type);
-
-        descpara.setAttribute("class", "propname");
-        descpara.innerHTML = pretty;
-
-        div.appendChild(descpara);
-
-        // Draw icon
-        let icon = type_to_icon(type);
-
-        if (icon) {
-            const iconspan = document.createElement("p");
-
-            iconspan.setAttribute("class", "icon");
-            iconspan.innerHTML = icon;
-
-            div.appendChild(iconspan);
-        }
-
-        // Create percentage span
-        create_pct_span(div, index);
-
-        if (type == 'J') {
-            for (let i = 1; i <= 2; i++) {
-                create_pct_span(div, index, i);
-            }
-        }
-
-        // Add the divs
-        reldiv.appendChild(div);
-        elem.appendChild(reldiv);
+    for (const [index, code] of space_codes.entries()) {
+        // Find space table cell and add space to it
+        let space = create_space(index, code);
+        document.getElementById(index.toString()).appendChild(space);
     }
 
     // Set up pause/play button
@@ -277,6 +189,98 @@ function setup_board(data) {
     // Display the board
     const main = document.getElementById("main");
     main.style.display = "flex";
+}
+
+function create_space(index, code) {
+    // Get space type
+    const type = space_types[index];
+
+    // Calculate orientation
+    let orient;
+    let side;
+
+    if (index == 0) {
+        orient = "nw";
+        side = "c";
+    } else if (index < 10) {
+        orient = "n";
+        side = "tb";
+    } else if (index == 10) {
+        orient = "ne";
+        side = "c";
+    } else if (index < 20) {
+        orient = "e";
+        side = "lr";
+    } else if (index == 20) {
+        orient = "se";
+        side = "c";
+    } else if (index < 30) {
+        orient = "s";
+        side = "tb";
+    } else if (index == 30) {
+        orient = "sw";
+        side = "c";
+    } else {
+        orient = "w";
+        side = "lr";
+    }
+
+    // Create divs
+    const reldiv = document.createElement("div");
+    reldiv.setAttribute("class", `space_reldiv space_reldiv_${orient} space_reldiv_${side}`);
+
+    const div = document.createElement("div");
+    div.setAttribute("class", `space_div space_div_${orient} space_div_${side}`);
+
+    // Add colour block for property spaces
+    if (type == 'P') {
+        // Work out colour
+        const colour = set_to_colour(code[0]);
+
+        // Add the div
+        const colourdiv = document.createElement("div");
+
+        colourdiv.setAttribute("class", "colour_block");
+        colourdiv.setAttribute("style", `background-color: ${colour};`);
+
+        div.appendChild(colourdiv);
+    }
+
+    // Create description paragraph
+    const descpara = document.createElement("p");
+
+    const pretty = pretty_desc(code, type);
+
+    descpara.setAttribute("class", "propname");
+    descpara.innerHTML = pretty;
+
+    div.appendChild(descpara);
+
+    // Draw icon
+    let icon = type_to_icon(type);
+
+    if (icon) {
+        const iconspan = document.createElement("p");
+
+        iconspan.setAttribute("class", "icon");
+        iconspan.innerHTML = icon;
+
+        div.appendChild(iconspan);
+    }
+
+    // Create percentage span
+    create_pct_span(div, index);
+
+    if (type == 'J') {
+        for (let i = 1; i <= 2; i++) {
+            create_pct_span(div, index, i);
+        }
+    }
+
+    // Add the divs
+    reldiv.appendChild(div);
+
+    return reldiv;
 }
 
 function create_pct_span(parent, index, sub) {
@@ -462,7 +466,7 @@ function process_stats(stats) {
 
     // Rank the spaces by arrivals
     for (const [index, arrivals] of stats.arrivals.entries()) {
-        switch (square_type[index]) {
+        switch (space_types[index]) {
             case 'J': // Just visiting
                 if (split_just_visiting) {
                     leaderboard.push([index, arrivals, 2]);
@@ -474,10 +478,10 @@ function process_stats(stats) {
 
                 if (split_just_visiting) {
                     // Jail (visit sub 2)
-                    leaderboard.push([square_visit, arrivals, 1]);
+                    leaderboard.push([space_visit, arrivals, 1]);
                 } else {
                     // Combined jail + just visiting
-                    leaderboard.push([square_visit, arrivals + stats.arrivals[square_visit], 0]);
+                    leaderboard.push([space_visit, arrivals + stats.arrivals[space_visit], 0]);
                 }
 
                 break;
@@ -489,7 +493,7 @@ function process_stats(stats) {
     // Sort by arrivals
     leaderboard.sort(([_ia, aa, _sa], [_ib, ab, _sb]) => Number(ab - aa));
 
-    // Draw colour ranked percentages on board squares
+    // Draw colour ranked percentages on board spaces
     const split = 180 / leaderboard.length;
 
     for (const [rank, [index, arrivals, sub]] of leaderboard.entries()) {
@@ -516,42 +520,23 @@ function process_stats(stats) {
     for (let i = 0; i < (full_leaderboard ? leaderboard.length : 20); i++) {
         const [elem, stat, sub] = leaderboard[i];
 
-        // Create colour swatch for properties
-        let addelem;
-
-        if (square_type[elem] == 'P') {
-            const colour = set_to_colour(square_desc[elem][0]);
-            addelem = document.createElement("span");
-            addelem.setAttribute("class", "colsample");
-            addelem.setAttribute("style", `background-color: ${colour}`);
-        }
-
-        // Get space description
-        let desc;
-
-        if (sub == 2) {
-            desc = "Just Visiting";
-        } else {
-            desc = pretty_desc(square_desc[elem], square_type[elem], true);
-        }
-
         // Get expected frequency
         let expected;
 
-        if (square_type[elem] == 'g') {
+        if (space_types[elem] == 'g') {
             // Go to jail
             expected = 0;
-        } else if (square_type[elem] == 'J') {
+        } else if (space_types[elem] == 'J') {
             // Jail
             switch (sub) {
                 case 0: // Combined jail/just visiting
-                    expected = expected_freq[square_visit] + expected_freq[square_g2j];
+                    expected = expected_freq[space_visit] + expected_freq[space_g2j];
                     break;
                 case 1: // In jail
-                    expected = expected_freq[square_g2j];
+                    expected = expected_freq[space_g2j];
                     break;
                 case 2: // Just visiting
-                    expected = expected_freq[square_visit];
+                    expected = expected_freq[space_visit];
                     break;
             }
         } else {
@@ -559,24 +544,26 @@ function process_stats(stats) {
         }
 
         // Add leaderboard main entry
-        add_leaderboard(tbody, desc, stat, stats.moves, false, expected, addelem)
+        add_leaderboard_row(tbody, 'S', [elem, sub], stat, stats.moves, expected)
 
         // Get arrival reasons
         let reasons;
 
-        if (square_type[elem] == 'J' && sub !== 2) {
+        if (space_types[elem] == 'J' && sub !== 2) {
             // Get reasons from go to jail for jail
-            reasons = stats.reasons[square_g2j];
-        } else if (square_type[elem] == 'g') {
+            reasons = stats.reasons[space_g2j];
+        } else if (space_types[elem] == 'g') {
             // No reasons for actual go to jail
             reasons = [];
         } else {
             reasons = stats.reasons[elem];
         }
 
+        let sort_reasons = [];
+
         // Special handling for Just Visiting for Jail space
-        if (!split_just_visiting && square_type[elem] == 'J') {
-            add_leaderboard(tbody, "Just Visiting", stats.arrivals[square_visit], stat, true);
+        if (!split_just_visiting && space_types[elem] == 'J') {
+            sort_reasons.push(['J', [], stats.arrivals[space_visit]]);
         }
 
         // Add arrival reasons
@@ -586,7 +573,15 @@ function process_stats(stats) {
                 continue;
             }
 
-            add_leaderboard(tbody, arrival_reason_descs[index], count, stat, true)
+            sort_reasons.push(['R', [index, elem, sub], count]);
+        }
+
+        // Sort descending
+        sort_reasons.sort((a, b) => Number(b[2]) - Number(a[2]));
+
+        // Add to the leaderboard
+        for (const [type, idxelems, count] of sort_reasons) {
+            add_leaderboard_row(tbody, type, idxelems, count, stat);
         }
     }
 
@@ -690,25 +685,130 @@ function update_stat(id, value, total) {
     }
 }
 
-function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
+let leaderboard_row_cache = {};
+
+function add_leaderboard_row(tbody, type, idxelems, value, total, expected) {
+    // Look up leaderboard row in the cache
+    let key = `${type}-${idxelems.join("-")}`;
+
+    let row = leaderboard_row_cache[key];
+
+    if (row === undefined) {
+        // Not found - create it
+        row = create_leaderboard_row(type, idxelems);
+        leaderboard_row_cache[key] = row;
+    }
+
+    // Set value
+    row.value.innerText = number_formatter.format(value);
+
+    // Set percentage
+    const pct = percent_calc(value, total);
+    row.pct.innerText = percent_fmt(pct, 3);
+
+    if (expected !== undefined) {
+        // Set expected
+        row.expected.innerText = percent_fmt(expected, 3);
+
+        // Set error
+        const error = pct - expected;
+        row.error.innerText = percent_fmt(error, 4);
+        colour_error(row.error, error, 6);
+    } else {
+        row.pct.innerText = "";
+        row.error.innerText = "";
+    }
+
+    // Add row to table
+    tbody.appendChild(row.tr);
+}
+
+function create_leaderboard_row(type, idxelems) {
     // Create table row
     const tr = document.createElement("tr");
 
-    if (sub) {
+    let minor = false;
+
+    // Add description cell
+    let desc_cell;
+
+    switch (type) {
+        case 'S':
+            desc_cell = create_leaderboard_space_cell(idxelems[0], idxelems[1]);
+            break;
+        case 'J':
+            desc_cell = create_leaderboard_text_cell("Just Visiting");
+            minor = true;
+            break;
+        case 'R':
+            desc_cell = create_leaderboard_text_cell(arrival_reason_descs[idxelems[0]]);
+            minor = true;
+            break;
+    }
+
+    if (minor) {
         // Sub stat - add class
         tr.setAttribute("class", "substat");
     }
 
-    tbody.appendChild(tr);
+    tr.appendChild(desc_cell);
 
+    // Create number cell
+    const value = document.createElement("td");
+    value.setAttribute("class", "stat");
+    tr.appendChild(value);
+
+    // Create percentage cell
+    const pct = document.createElement("td");
+    pct.setAttribute("class", "statpct");
+    tr.appendChild(pct);
+
+    // Create expected cell
+    const expected = document.createElement("td");
+    expected.setAttribute("class", "statpct");
+    tr.appendChild(expected);
+
+    // Create error cell
+    let error = document.createElement("td");
+    error.setAttribute("class", "statpct");
+
+    return {
+        tr: tr,
+        value: value,
+        pct: pct,
+        expected: expected,
+        error: error,
+    }
+}
+
+function create_leaderboard_space_cell(elem, sub) {
     // Create description cell
-    let td = document.createElement("td");
+    const td = document.createElement("td");
     td.setAttribute("class", "statlabel");
+
+    // Create colour swatch for properties
+    let addelem;
+
+    if (space_types[elem] == 'P') {
+        const colour = set_to_colour(space_codes[elem][0]);
+        addelem = document.createElement("span");
+        addelem.setAttribute("class", "colsample");
+        addelem.setAttribute("style", `background-color: ${colour}`);
+    }
+
+    // Get space description
+    let desc;
+
+    if (sub == 2) {
+        desc = "Just Visiting";
+    } else {
+        desc = pretty_desc(space_codes[elem], space_types[elem], true);
+    }
 
     if (addelem) {
         // Add text
         let span = document.createElement("span");
-        span.innerHTML = `${desc}`;
+        span.innerHTML = desc;
         td.appendChild(span);
 
         // Add additional element
@@ -718,44 +818,17 @@ function add_leaderboard(tbody, desc, value, total, sub, expected, addelem) {
         td.innerHTML = desc;
     }
 
-    tr.appendChild(td);
+    return td;
+}
 
-    // Create number cell
-    td = document.createElement("td");
+function create_leaderboard_text_cell(text) {
+    // Create text cell
+    let td = document.createElement("td");
+    td.setAttribute("class", "statlabel");
 
-    td.setAttribute("class", "stat");
-    td.innerText = number_formatter.format(value);
+    td.innerText = text;
 
-    tr.appendChild(td);
-
-    // Create percentage cell
-    td = document.createElement("td");
-
-    td.setAttribute("class", "statpct");
-    const pct = percent_calc(value, total);
-    td.innerText = percent_fmt(pct, 3);
-
-    tr.appendChild(td);
-
-    if (expected !== undefined) {
-        // Create expected cell
-        td = document.createElement("td");
-
-        td.setAttribute("class", "statpct");
-        td.innerText = percent_fmt(expected, 3);
-
-        tr.appendChild(td);
-
-        // Create error cell
-        td = document.createElement("td");
-
-        td.setAttribute("class", "statpct");
-        const error = pct - expected;
-        td.innerText = percent_fmt(error, 4);
-        colour_error(td, error, 6);
-
-        tr.appendChild(td);
-    }
+    return td;
 }
 
 // Percentage calculation and display
@@ -846,7 +919,7 @@ function update_jailstats_button() {
     // Update jail stats button
     const btn = document.getElementById("splitjail");
 
-    const index = square_type.findIndex((e) => e == 'J');
+    const index = space_types.findIndex((e) => e == 'J');
 
     if (split_just_visiting) {
         btn.innerText = "Combine Just Visiting";
@@ -882,7 +955,7 @@ function update_fullboard_button() {
     const btn = document.getElementById("fullboard");
 
     if (full_leaderboard) {
-        btn.innerText = "Top 15 Only";
+        btn.innerText = "Top 20 Only";
     } else {
         btn.innerText = "Full Leaderboard";
     }

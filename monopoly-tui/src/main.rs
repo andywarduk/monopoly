@@ -183,7 +183,7 @@ where
     draw_instruction_line(&mut y, "MONOPOLY")?;
     y += 1;
     draw_instruction_line(&mut y, "Calculates the probability of landing")?;
-    draw_instruction_line(&mut y, "on each square by simulating moves")?;
+    draw_instruction_line(&mut y, "on each space by simulating moves")?;
     y += 1;
     draw_instruction_line(&mut y, "Press 'q' to exit")?;
     draw_instruction_line(&mut y, "Press 'p' to toggle pause")?;
@@ -215,7 +215,7 @@ where
     queue!(w, style::ResetColor, cursor::Hide, cursor::MoveTo(1, 1))?;
 
     // Draw the board
-    let mut draw_square_int = |x, y, desc, arrivals, space: &Space| -> io::Result<()> {
+    let mut draw_space_int = |x, y, desc, arrivals, space: &Space| -> io::Result<()> {
         let pct = percent(arrivals, board.moves());
 
         let pct_str = if pct < 10.0 {
@@ -254,34 +254,34 @@ where
         Ok(())
     };
 
-    let mut draw_square = |x, y, elem| -> io::Result<()> {
+    let mut draw_space = |x, y, elem| -> io::Result<()> {
         let desc = space_desc(elem);
 
-        draw_square_int(x, y, desc, board.arrivals_on(elem), &SPACES[elem])
+        draw_space_int(x, y, desc, board.arrivals_on(elem), &SPACES[elem])
     };
 
     // Top row
     for i in 0..10 {
         let elem = i as usize;
-        draw_square(XPAD + (i * XSPACE), YPAD, elem)?;
+        draw_space(XPAD + (i * XSPACE), YPAD, elem)?;
     }
 
     // Right column (excluding jail)
     for i in 1..10 {
         let elem = (i + 10) as usize;
-        draw_square(XPAD + (10 * XSPACE), YPAD + (i * YSPACE), elem)?;
+        draw_space(XPAD + (10 * XSPACE), YPAD + (i * YSPACE), elem)?;
     }
 
     // Bottom row
     for i in 0..10 {
         let elem = (29 - i) as usize;
-        draw_square(XPAD + ((i + 1) * XSPACE), YPAD + (10 * YSPACE), elem)?;
+        draw_space(XPAD + ((i + 1) * XSPACE), YPAD + (10 * YSPACE), elem)?;
     }
 
     // Left column (excluding go to jail)
     for i in 0..9 {
         let elem = (39 - i) as usize;
-        draw_square(XPAD, YPAD + ((i + 1) * YSPACE), elem)?;
+        draw_space(XPAD, YPAD + ((i + 1) * YSPACE), elem)?;
     }
 
     let visit_elem = Space::find(Space::Visit);
@@ -292,15 +292,15 @@ where
 
     if split_jail {
         // Split jail & Just visiting
-        draw_square_int(XPAD + (10 * XSPACE), YPAD, "VISIT".to_string(), visit, &SPACES[visit_elem])?;
-        draw_square_int(XPAD + (9 * XSPACE), YPAD + YSPACE, "JAIL".to_string(), jail, &SPACES[visit_elem])?;
+        draw_space_int(XPAD + (10 * XSPACE), YPAD, "VISIT".to_string(), visit, &SPACES[visit_elem])?;
+        draw_space_int(XPAD + (9 * XSPACE), YPAD + YSPACE, "JAIL".to_string(), jail, &SPACES[visit_elem])?;
     } else {
         // Combined jail
-        draw_square_int(XPAD + (10 * XSPACE), YPAD, "JAIL".to_string(), visit + jail, &SPACES[visit_elem])?;
+        draw_space_int(XPAD + (10 * XSPACE), YPAD, "JAIL".to_string(), visit + jail, &SPACES[visit_elem])?;
     }
 
     // Draw go to jail
-    draw_square_int(XPAD, YPAD + (10 * YSPACE), "G2J".to_string(), 0, &SPACES[30])?;
+    draw_space_int(XPAD, YPAD + (10 * YSPACE), "G2J".to_string(), 0, &SPACES[30])?;
 
     Ok(())
 }

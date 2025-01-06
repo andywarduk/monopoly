@@ -28,7 +28,7 @@ impl WasmBoard {
         }
     }
 
-    pub fn get_squares_desc(&self) -> Vec<String> {
+    pub fn get_spaces_desc(&self) -> Vec<String> {
         SPACES
             .iter()
             .map(|s| match s {
@@ -56,7 +56,7 @@ impl WasmBoard {
             .collect()
     }
 
-    pub fn get_squares_type(&self) -> Vec<String> {
+    pub fn get_spaces_type(&self) -> Vec<String> {
         SPACES
             .iter()
             .map(|s| match s {
