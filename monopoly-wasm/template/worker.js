@@ -48,12 +48,12 @@ init({ module_or_path: new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.h
                     console.debug("Got exec message", msg.data)
                 }
 
-                board.run(msg.data.ticks);
+                let rstats = board.run(msg.data.ticks);
 
                 // Send stats back
                 postMessage({
                     msgtype: "execfin",
-                    stats: get_stats()
+                    stats: build_jstats(rstats),
                 });
 
                 break;
@@ -86,33 +86,28 @@ function initialise(msg) {
 
     if (msg.msgtype == "init") {
         // Send extra data back for first initialise
-        ret.spaces_desc = board.get_spaces_desc();
-        ret.spaces_type = board.get_spaces_type();
-        ret.arrival_reason_descs = board.get_arrival_reason_descs();
+        ret.spaces = board.get_spaces();
+        ret.arrival_reasons = board.get_arrival_reason_descs();
     }
 
     postMessage(ret);
 }
 
-function get_stats() {
-    let rstats = board.get_stats();
-    let doubles = board.get_doubles();
-    let arrivals = board.get_arrivals();
-    let rollfreq = board.get_rollfreq();
+function build_jstats(rstats) {
+    // Chop reasons array
+    const reasons = [];
 
-    let reasons = [];
-
-    for (let i = 0; i < arrivals.length; i++) {
-        reasons.push(board.get_arrival_reasons(i));
+    for (let i = 0; i < rstats.reasons.length; i += rstats.reasons_stride) {
+        reasons.push(rstats.reasons.subarray(i, i + rstats.reasons_stride));
     }
 
     return {
         turns: rstats.turns,
         moves: rstats.moves,
-        doubles: doubles,
-        arrivals: arrivals,
+        doubles: rstats.doubles,
+        rollfreq: rstats.rollfreq,
+        arrivals: rstats.arrivals,
         reasons: reasons,
-        rollfreq: rollfreq,
         jailwait: rstats.jailwait,
     }
 }

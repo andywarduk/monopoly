@@ -404,7 +404,7 @@ where
             elem
         };
 
-        for (reason, count) in board.arrival_reasons(arrivals_elem).iter().enumerate() {
+        for (reason, count) in board.arrival_reasons_on(arrivals_elem).iter().enumerate() {
             if *count != 0 {
                 draw_stat_pct(w, &mut y, &format!("  {}", MoveReason::from_usize(reason).unwrap()), *count, a, 2)?;
             }

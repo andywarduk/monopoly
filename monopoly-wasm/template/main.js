@@ -15,13 +15,10 @@ let full_leaderboard = false;
 // Worker thread object
 let worker;
 
-// Description of each space
+// Code of each space
 let space_codes;
 
-// Type of each space
-let space_types;
-
-// Index of needed spaces
+// Indexes of needed spaces
 let space_visit;
 let space_g2j;
 
@@ -147,19 +144,18 @@ function worker_init(first) {
 // Set up board spacess
 function setup_board(data) {
     // Save space data
-    space_codes = data.spaces_desc;
-    space_types = data.spaces_type;
+    space_codes = data.spaces;
 
-    space_visit = space_types.findIndex((s) => s == 'J');
-    space_g2j = space_types.findIndex((s) => s == 'g');
+    space_visit = space_codes.findIndex((s) => s == "J");
+    space_g2j = space_codes.findIndex((s) => s == "g");
 
     // Save arrival reason descriptions
-    arrival_reason_descs = data.arrival_reason_descs;
+    arrival_reason_descs = data.arrival_reasons;
 
-    for (const [index, code] of space_codes.entries()) {
+    // Create space content
+    for (let i = 0; i < space_codes.length; i++) {
         // Find space table cell and add space to it
-        let space = create_space(index, code);
-        document.getElementById(index.toString()).appendChild(space);
+        document.getElementById(`${i}`).appendChild(create_space(i));
     }
 
     // Set up pause/play button
@@ -191,9 +187,9 @@ function setup_board(data) {
     main.style.display = "flex";
 }
 
-function create_space(index, code) {
-    // Get space type
-    const type = space_types[index];
+function create_space(index) {
+    // Get space code
+    const code = space_codes[index];
 
     // Calculate orientation
     let orient;
@@ -233,9 +229,9 @@ function create_space(index, code) {
     div.setAttribute("class", `space_div space_div_${orient} space_div_${side}`);
 
     // Add colour block for property spaces
-    if (type == 'P') {
+    if (code[0] == 'P') {
         // Work out colour
-        const colour = set_to_colour(code[0]);
+        const colour = set_to_colour(code[1]);
 
         // Add the div
         const colourdiv = document.createElement("div");
@@ -249,15 +245,13 @@ function create_space(index, code) {
     // Create description paragraph
     const descpara = document.createElement("p");
 
-    const pretty = pretty_desc(code, type);
-
     descpara.setAttribute("class", "propname");
-    descpara.innerHTML = pretty;
+    descpara.innerHTML = space_code_to_description(code);
 
     div.appendChild(descpara);
 
     // Draw icon
-    let icon = type_to_icon(type);
+    let icon = space_code_to_icon(code);
 
     if (icon) {
         const iconspan = document.createElement("p");
@@ -271,7 +265,8 @@ function create_space(index, code) {
     // Create percentage span
     create_pct_span(div, index);
 
-    if (type == 'J') {
+    if (code == 'J') {
+        // Create subdivisions for Jail space
         for (let i = 1; i <= 2; i++) {
             create_pct_span(div, index, i);
         }
@@ -324,27 +319,33 @@ function set_to_colour(set) {
     }
 }
 
-function type_to_icon(type) {
-    // Convert space type to icon
-    switch (type) {
+function space_code_to_icon(code) {
+    // Convert space code to icon
+    switch (code[0]) {
         case 'U':
-            return "💡";
-        case 'u':
-            return "🛁";
+            switch (code) {
+                case 'U1':
+                    return "💡";
+                case 'U2':
+                    return "🛁";
+            }
         case 'R':
             return "🚂";
         case 'c':
-            return "<span style='font-size: 50px'>?</span>";
+            return "<span style='font-size: 50px; color: black;'>?</span>";
         case 'C':
             return "🏆";
         case 'T':
-            return "💠";
-        case 't':
-            return "💍";
+            switch (code) {
+                case 'T1':
+                    return "💠";
+                case 'T2':
+                    return "💍";
+            }
         case 'J':
-            return "<span style='font-size: 50px'>▥</span>";
+            return "<span style='font-size: 50px; color: black;'>▥</span>";
         case "G":
-            return "<span style='font-size: 50px'>←</span>"
+            return "<span style='font-size: 50px; color: black;'>←</span>"
         case 'g':
             return "👮‍♂️";
         case 'F':
@@ -352,11 +353,19 @@ function type_to_icon(type) {
     };
 }
 
-function pretty_desc(desc, type, show_elem) {
+function space_code_to_description(code, show_elem) {
     // Return description of property according to UK Monopoly version
-    switch (type) {
+    switch (code[0]) {
+        case 'G':
+            return "Go";
+        case 'J':
+            return "Jail";
+        case 'F':
+            return "Free Parking";
+        case 'g':
+            return "Go to Jail";
         case 'P':
-            switch (desc) {
+            switch (code.substring(1)) {
                 case "A1":
                     return "Old Kent Road";
                 case "A2":
@@ -403,7 +412,7 @@ function pretty_desc(desc, type, show_elem) {
                     return "Mayfair";
             }
         case 'R':
-            switch (desc) {
+            switch (code) {
                 case "R1":
                     return "Kings Cross Station";
                 case "R2":
@@ -413,21 +422,35 @@ function pretty_desc(desc, type, show_elem) {
                 case "R4":
                     return "Liverpool St. Station";
             }
+        case 'U':
+            switch (code) {
+                case "U1":
+                    return "Electric Company";
+                case "U2":
+                    return "Water Works";
+            }
         case 'C':
             if (show_elem) {
-                return `Community Chest ${desc.substring(1)}`;
+                return `Community Chest ${code.substring(1)}`;
             } else {
                 return "Community Chest";
             }
         case 'c':
             if (show_elem) {
-                return `Chance ${desc.substring(1)}`;
+                return `Chance ${code.substring(1)}`;
             } else {
                 return "Chance";
             }
+        case 'T':
+            switch (code) {
+                case "T1":
+                    return "Income Tax";
+                case "T2":
+                    return "Luxury Tax";
+            }
     }
 
-    return desc
+    return "<Unknown>";
 }
 
 function process_stats(stats) {
@@ -437,10 +460,17 @@ function process_stats(stats) {
         return;
     }
 
-    if (debug) {
-        console.debug("Processing stats:", stats);
-    }
+    update_games_stats(stats);
+    update_percentages_and_leaderboard(stats);
+    update_roll_frequencies(stats);
 
+    // Auto-pause at 100,000,000
+    if (((stats.turns + BigInt(iterations)) % 100_000_000n) == 0) {
+        pause_click();
+    }
+}
+
+function update_games_stats(stats) {
     // Update game statistics
     //                2 rolls            3 rolls                   3 rolls (goes to jail on 3rd roll)
     const doubles_tot = stats.doubles[0] + (2n * stats.doubles[1]) + (3n * stats.doubles[2]);
@@ -460,13 +490,15 @@ function process_stats(stats) {
     update_stat("stat_moves", stats.moves);
 
     update_stat("stat_doubles_tot", doubles_tot, stats.moves);
+}
 
+function update_percentages_and_leaderboard(stats) {
     // Calculate leaderboard
     let leaderboard = [];
 
     // Rank the spaces by arrivals
     for (const [index, arrivals] of stats.arrivals.entries()) {
-        switch (space_types[index]) {
+        switch (space_codes[index][0]) {
             case 'J': // Just visiting
                 if (split_just_visiting) {
                     leaderboard.push([index, arrivals, 2]);
@@ -494,7 +526,7 @@ function process_stats(stats) {
     leaderboard.sort(([_ia, aa, _sa], [_ib, ab, _sb]) => Number(ab - aa));
 
     // Draw colour ranked percentages on board spaces
-    const split = 180 / leaderboard.length;
+    const hue_split = 180 / leaderboard.length;
 
     for (const [rank, [index, arrivals, sub]] of leaderboard.entries()) {
         let id;
@@ -506,41 +538,50 @@ function process_stats(stats) {
         }
 
         const elem = document.getElementById(id);
-        const colour = `hsl(${rank * split}, 100%, 60%)`;
+        const colour = `hsl(${rank * hue_split}, 100%, 60%)`;
 
         elem.style.backgroundColor = colour;
         elem.innerText = percent(arrivals, stats.moves);
     };
 
-    // Clear the leaderboard
+    // Clear the leaderboard table
     const tbody = document.getElementById("leaderboard");
     tbody.textContent = "";
 
     // Get top 20 or full
     for (let i = 0; i < (full_leaderboard ? leaderboard.length : 20); i++) {
         const [elem, stat, sub] = leaderboard[i];
+        let code = space_codes[elem];
 
         // Get expected frequency
         let expected;
 
-        if (space_types[elem] == 'g') {
-            // Go to jail
-            expected = 0;
-        } else if (space_types[elem] == 'J') {
-            // Jail
-            switch (sub) {
-                case 0: // Combined jail/just visiting
-                    expected = expected_freq[space_visit] + expected_freq[space_g2j];
-                    break;
-                case 1: // In jail
-                    expected = expected_freq[space_g2j];
-                    break;
-                case 2: // Just visiting
-                    expected = expected_freq[space_visit];
-                    break;
-            }
-        } else {
-            expected = expected_freq[elem];
+        switch (code) {
+            case 'g': // Go to jail
+                expected = 0;
+
+                break;
+
+            case 'J': // Jail
+                switch (sub) {
+                    case 0: // Combined jail/just visiting
+                        expected = expected_freq[space_visit] + expected_freq[space_g2j];
+                        break;
+                    case 1: // In jail
+                        expected = expected_freq[space_g2j];
+                        break;
+                    case 2: // Just visiting
+                        expected = expected_freq[space_visit];
+                        break;
+                }
+
+                break;
+
+            default:
+                expected = expected_freq[elem];
+
+                break;
+
         }
 
         // Add leaderboard main entry
@@ -549,10 +590,10 @@ function process_stats(stats) {
         // Get arrival reasons
         let reasons;
 
-        if (space_types[elem] == 'J' && sub !== 2) {
+        if (code == 'J' && sub !== 2) {
             // Get reasons from go to jail for jail
             reasons = stats.reasons[space_g2j];
-        } else if (space_types[elem] == 'g') {
+        } else if (code == 'g') {
             // No reasons for actual go to jail
             reasons = [];
         } else {
@@ -562,7 +603,7 @@ function process_stats(stats) {
         let sort_reasons = [];
 
         // Special handling for Just Visiting for Jail space
-        if (!split_just_visiting && space_types[elem] == 'J') {
+        if (!split_just_visiting && code == 'J') {
             sort_reasons.push(['J', [], stats.arrivals[space_visit]]);
         }
 
@@ -584,7 +625,9 @@ function process_stats(stats) {
             add_leaderboard_row(tbody, type, idxelems, count, stat);
         }
     }
+}
 
+function update_roll_frequencies(stats) {
     // Roll frequencies
     const rolls = stats.rollfreq;
 
@@ -640,11 +683,6 @@ function process_stats(stats) {
         err.innerText = percent_fmt(error, 4);
         colour_error(err, error, 6);
     }
-
-    // Auto-pause at 100,000,000
-    if (((stats.turns + BigInt(iterations)) % 100_000_000n) == 0) {
-        pause_click();
-    }
 }
 
 function roundnum(num, dp) {
@@ -667,7 +705,7 @@ function colour_error(elem, error, dp) {
             elem.style.color = "red";
             break;
         case 0:
-            elem.style.color = "black";
+            elem.style.color = "var(--text-color)";
             break;
         case 1:
             elem.style.color = "green";
@@ -685,6 +723,7 @@ function update_stat(id, value, total) {
     }
 }
 
+// Cached leaderboard table rows
 let leaderboard_row_cache = {};
 
 function add_leaderboard_row(tbody, type, idxelems, value, total, expected) {
@@ -771,6 +810,7 @@ function create_leaderboard_row(type, idxelems) {
     // Create error cell
     let error = document.createElement("td");
     error.setAttribute("class", "statpct");
+    tr.appendChild(error);
 
     return {
         tr: tr,
@@ -786,33 +826,32 @@ function create_leaderboard_space_cell(elem, sub) {
     const td = document.createElement("td");
     td.setAttribute("class", "statlabel");
 
-    // Create colour swatch for properties
-    let addelem;
-
-    if (space_types[elem] == 'P') {
-        const colour = set_to_colour(space_codes[elem][0]);
-        addelem = document.createElement("span");
-        addelem.setAttribute("class", "colsample");
-        addelem.setAttribute("style", `background-color: ${colour}`);
-    }
-
     // Get space description
     let desc;
 
     if (sub == 2) {
         desc = "Just Visiting";
     } else {
-        desc = pretty_desc(space_codes[elem], space_types[elem], true);
+        desc = space_code_to_description(space_codes[elem], true);
     }
 
-    if (addelem) {
-        // Add text
+    if (space_codes[elem][0] == 'P') {
+        // Property
+
+        // Add text span
         let span = document.createElement("span");
         span.innerHTML = desc;
         td.appendChild(span);
 
-        // Add additional element
-        td.appendChild(addelem);
+        // Create colour block
+        const colour = set_to_colour(space_codes[elem][1]);
+
+        let colour_block = document.createElement("span");
+        colour_block.setAttribute("class", "colsample");
+        colour_block.setAttribute("style", `background-color: ${colour}`);
+
+        // Add colour block
+        td.appendChild(colour_block);
     } else {
         // Add text
         td.innerHTML = desc;
@@ -919,8 +958,6 @@ function update_jailstats_button() {
     // Update jail stats button
     const btn = document.getElementById("splitjail");
 
-    const index = space_types.findIndex((e) => e == 'J');
-
     if (split_just_visiting) {
         btn.innerText = "Combine Just Visiting";
     } else {
@@ -929,14 +966,16 @@ function update_jailstats_button() {
 
     let elem;
 
-    elem = document.getElementById(`pct${index}`);
+    // Show/hide percentages on the jail space
+    elem = document.getElementById(`pct${space_visit}`);
     elem.style.display = (split_just_visiting ? "none" : "inline");
-    elem = document.getElementById(`pct${index}-1`);
+    elem = document.getElementById(`pct${space_visit}-1`);
     elem.style.display = (split_just_visiting ? "inline" : "none");
-    elem = document.getElementById(`pct${index}-2`);
+    elem = document.getElementById(`pct${space_visit}-2`);
     elem.style.display = (split_just_visiting ? "inline" : "none");
 
     if (last_stats) {
+        // Re-process last stats
         process_stats(last_stats);
     }
 }
@@ -961,6 +1000,7 @@ function update_fullboard_button() {
     }
 
     if (last_stats) {
+        // Re-process last stats
         process_stats(last_stats);
     }
 }

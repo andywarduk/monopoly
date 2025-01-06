@@ -16,101 +16,64 @@ pub struct WasmBoard {
 pub struct WasmStats {
     pub turns: u64,
     pub moves: u64,
+    #[wasm_bindgen(getter_with_clone)]
+    pub doubles: Vec<u64>,
+    #[wasm_bindgen(getter_with_clone)]
+    pub rollfreq: Vec<u64>,
+    #[wasm_bindgen(getter_with_clone)]
+    pub arrivals: Vec<u64>,
+    pub reasons_stride: usize,
+    #[wasm_bindgen(getter_with_clone)]
+    pub reasons: Vec<u64>,
     pub jailwait: bool,
 }
 
 #[wasm_bindgen]
 impl WasmBoard {
-    #[allow(unused)]
-    pub fn run(&mut self, ticks: usize) {
+    /// Run the game
+    pub fn run(&mut self, ticks: usize) -> WasmStats {
+        // Run the requested number of ticks
         for _ in 0..ticks {
             self.board.turn();
         }
-    }
 
-    pub fn get_spaces_desc(&self) -> Vec<String> {
-        SPACES
-            .iter()
-            .map(|s| match s {
-                Space::Go => "Go".to_string(),
-                Space::Visit => "Jail".to_string(),
-                Space::FreeParking => "Free Parking".to_string(),
-                Space::GoToJail => "Go to Jail".to_string(),
-                Space::Property(set, n) => {
-                    format!("{}{}", (*set + b'A') as char, n + 1)
-                }
-                Space::Rail(n) => format!("R{}", n + 1),
-                Space::Utility(n) => match n {
-                    0 => "Electric Company".to_string(),
-                    1 => "Water Works".to_string(),
-                    _ => panic!("Unexpected utility"),
-                },
-                Space::CommunityChest(n) => format!("C{}", n + 1),
-                Space::Chance(n) => format!("c{}", n + 1),
-                Space::Tax(n) => match n {
-                    0 => "Income Tax".to_string(),
-                    1 => "Luxury Tax".to_string(),
-                    _ => panic!("Unexpected tax"),
-                },
-            })
-            .collect()
-    }
-
-    pub fn get_spaces_type(&self) -> Vec<String> {
-        SPACES
-            .iter()
-            .map(|s| match s {
-                Space::Go => 'G',
-                Space::Visit => 'J',
-                Space::FreeParking => 'F',
-                Space::GoToJail => 'g',
-                Space::Property(_, _) => 'P',
-                Space::Rail(_) => 'R',
-                Space::Utility(n) => match n {
-                    0 => 'U',
-                    1 => 'u',
-                    _ => panic!("unrecognised utility"),
-                },
-                Space::CommunityChest(_) => 'C',
-                Space::Chance(_) => 'c',
-                Space::Tax(n) => match n {
-                    0 => 'T',
-                    1 => 't',
-                    _ => panic!("unrecognised tax"),
-                },
-            })
-            .map(|c| c.to_string())
-            .collect()
-    }
-
-    pub fn get_stats(&self) -> WasmStats {
+        // Return stats
         WasmStats {
             turns: self.board.turns(),
             moves: self.board.moves(),
+            doubles: self.board.doubles().to_vec(),
+            rollfreq: self.board.rollfreq().to_vec(),
+            arrivals: self.board.arrivals().to_vec(),
+            reasons_stride: self.board.arrival_reasons()[0].len(),
+            reasons: self.board.arrival_reasons().iter().flat_map(|arr| arr.iter().copied()).collect(),
             jailwait: self.board.strategy() == Strategy::JailWait,
         }
     }
 
-    pub fn get_doubles(&self) -> Vec<u64> {
-        self.board.doubles().to_vec()
+    /// Get spaces
+    pub fn get_spaces(&self) -> Vec<String> {
+        SPACES
+            .iter()
+            .map(|s| match s {
+                Space::Go => "G".to_string(),
+                Space::Visit => "J".to_string(),
+                Space::FreeParking => "F".to_string(),
+                Space::GoToJail => "g".to_string(),
+                Space::Property(set, n) => format!("P{}{}", (*set + b'A') as char, n + 1),
+                Space::Rail(n) => format!("R{}", n + 1),
+                Space::Utility(n) => format!("U{}", n + 1),
+                Space::CommunityChest(n) => format!("C{}", n + 1),
+                Space::Chance(n) => format!("c{}", n + 1),
+                Space::Tax(n) => format!("T{}", n + 1),
+            })
+            .collect()
     }
 
-    pub fn get_arrivals(&self) -> Vec<u64> {
-        self.board.arrivals().to_vec()
-    }
-
-    pub fn get_arrival_reasons(&self, elem: usize) -> Vec<u64> {
-        self.board.arrival_reasons(elem).to_vec()
-    }
-
+    /// Get arrival reason descriptions
     pub fn get_arrival_reason_descs(&self) -> Vec<String> {
         MoveReason::iter()
             .filter_map(|r| if r.clone() as isize >= 0 { Some(r.to_string()) } else { None })
             .collect()
-    }
-
-    pub fn get_rollfreq(&self) -> Vec<u64> {
-        self.board.rollfreq().to_vec()
     }
 }
 

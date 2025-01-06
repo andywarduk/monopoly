@@ -159,8 +159,13 @@ impl Board {
         self.arrivals[elem]
     }
 
+    /// Returns reference to the space arrival reason array
+    pub fn arrival_reasons(&self) -> &[[u64; MoveReason::COUNT]; SPACES.len()] {
+        &self.arrival_reason
+    }
+
     /// Returns arrival reasons for a given space
-    pub fn arrival_reasons(&self, elem: usize) -> &[u64] {
+    pub fn arrival_reasons_on(&self, elem: usize) -> &[u64] {
         &self.arrival_reason[elem]
     }
 
