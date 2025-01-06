@@ -32,25 +32,32 @@ let last_stats;
 let expected_freq;
 
 // Number formatters
-let number_formatter;
+const number_formatter = Intl.NumberFormat();
 let percent_formatters = {};
 
-// Run setup
-setup();
-
-function setup() {
-    // Set up number formatters
-    number_formatter = Intl.NumberFormat();
-
+// Main setup function
+(() => {
     // Set up web worker
     if (window.Worker) {
         worker = new Worker("$link(worker.js)", { type: "module" });
+
+        worker.onerror = (e) => {
+            console.error("Worker raised an error:", e);
+            alert("Worker raised an error");
+        }
+
+        worker.onmessageerror = (e) => {
+            console.error("Worker raised a message error:", e);
+            alert("Worker raised a message error");
+        }
+
         worker.onmessage = process_worker_message;
     } else {
         alert("Web workers not available")
     }
-}
+})();
 
+// Process message received from the worker thread
 function process_worker_message(msg) {
     if (debug) {
         console.debug("Got message from worker:", msg);
@@ -132,6 +139,7 @@ function process_worker_message(msg) {
     }
 }
 
+// Initialise or re-initialise the worker thread
 function worker_init(first) {
     // Update spinner
     spinner_message("Initialising...");
@@ -141,7 +149,7 @@ function worker_init(first) {
     worker.postMessage({ msgtype: (first ? "init" : "reinit"), jailwait: jailwait, debug: workerdebug })
 }
 
-// Set up board spacess
+// Set up board spaces with data returned from worker initialisation
 function setup_board(data) {
     // Save space data
     space_codes = data.spaces;
@@ -187,6 +195,7 @@ function setup_board(data) {
     main.style.display = "flex";
 }
 
+// Create board space content for a given board space index
 function create_space(index) {
     // Get space code
     const code = space_codes[index];
@@ -278,6 +287,7 @@ function create_space(index) {
     return reldiv;
 }
 
+// Creates a percentage span for a board space
 function create_pct_span(parent, index, sub) {
     const pctdiv = document.createElement("div");
     const pctspan = document.createElement("span");
@@ -297,8 +307,8 @@ function create_pct_span(parent, index, sub) {
     parent.appendChild(pctdiv);
 }
 
+// Convert property set letter to colour
 function set_to_colour(set) {
-    // Convert property set letter to colour
     switch (set) {
         case 'A':
             return "rgb(140,87,60)";
@@ -319,8 +329,8 @@ function set_to_colour(set) {
     }
 }
 
+// Convert board space code to icon
 function space_code_to_icon(code) {
-    // Convert space code to icon
     switch (code[0]) {
         case 'U':
             switch (code) {
@@ -353,8 +363,8 @@ function space_code_to_icon(code) {
     };
 }
 
+// Return description of a space (London UK Monopoly version)
 function space_code_to_description(code, show_elem) {
-    // Return description of property according to UK Monopoly version
     switch (code[0]) {
         case 'G':
             return "Go";
@@ -453,6 +463,7 @@ function space_code_to_description(code, show_elem) {
     return "<Unknown>";
 }
 
+// Processes statistics returned by game tick
 function process_stats(stats) {
     // Make sure these stats are for the mode we're currently in
     if (stats.jailwait != jailwait) {
@@ -470,6 +481,7 @@ function process_stats(stats) {
     }
 }
 
+// Update game staistics from passed stats
 function update_games_stats(stats) {
     // Update game statistics
     //                2 rolls            3 rolls                   3 rolls (goes to jail on 3rd roll)
@@ -492,6 +504,18 @@ function update_games_stats(stats) {
     update_stat("stat_doubles_tot", doubles_tot, stats.moves);
 }
 
+// Update a game statistic with optional percentage
+function update_stat(id, value, total) {
+    const elem = document.getElementById(id);
+    elem.innerText = number_formatter.format(value);
+
+    if (total !== undefined) {
+        const telem = document.getElementById(`${id}_pct`);
+        telem.innerText = percent(value, total);
+    }
+}
+
+// Update percentages on the board spaces and fill the leaderboard
 function update_percentages_and_leaderboard(stats) {
     // Calculate leaderboard
     let leaderboard = [];
@@ -627,6 +651,7 @@ function update_percentages_and_leaderboard(stats) {
     }
 }
 
+// Update dice roll frequency statistics
 function update_roll_frequencies(stats) {
     // Roll frequencies
     const rolls = stats.rollfreq;
@@ -685,47 +710,10 @@ function update_roll_frequencies(stats) {
     }
 }
 
-function roundnum(num, dp) {
-    let mult = Math.pow(10, dp);
-    let result = Math.round((num + Number.EPSILON) * mult) / mult;
-
-    if (result === 0) {
-        // Turn negative zero in to positive zero
-        return 0
-    }
-
-    return result;
-}
-
-function colour_error(elem, error, dp) {
-    let rnderr = roundnum(error, dp);
-
-    switch (Math.sign(rnderr)) {
-        case -1:
-            elem.style.color = "red";
-            break;
-        case 0:
-            elem.style.color = "var(--text-color)";
-            break;
-        case 1:
-            elem.style.color = "green";
-            break;
-    }
-}
-
-function update_stat(id, value, total) {
-    const elem = document.getElementById(id);
-    elem.innerText = number_formatter.format(value);
-
-    if (total !== undefined) {
-        const telem = document.getElementById(`${id}_pct`);
-        telem.innerText = percent(value, total);
-    }
-}
-
 // Cached leaderboard table rows
 let leaderboard_row_cache = {};
 
+// Adds a leaderboard row - either from the cache or create
 function add_leaderboard_row(tbody, type, idxelems, value, total, expected) {
     // Look up leaderboard row in the cache
     let key = `${type}-${idxelems.join("-")}`;
@@ -762,6 +750,7 @@ function add_leaderboard_row(tbody, type, idxelems, value, total, expected) {
     tbody.appendChild(row.tr);
 }
 
+// Creates a leaderboard table row for caching
 function create_leaderboard_row(type, idxelems) {
     // Create table row
     const tr = document.createElement("tr");
@@ -821,6 +810,7 @@ function create_leaderboard_row(type, idxelems) {
     }
 }
 
+// Creates a leaderboard space description table cell
 function create_leaderboard_space_cell(elem, sub) {
     // Create description cell
     const td = document.createElement("td");
@@ -860,6 +850,7 @@ function create_leaderboard_space_cell(elem, sub) {
     return td;
 }
 
+// Creates a leaderboard plain text description table cell
 function create_leaderboard_text_cell(text) {
     // Create text cell
     let td = document.createElement("td");
@@ -868,6 +859,36 @@ function create_leaderboard_text_cell(text) {
     td.innerText = text;
 
     return td;
+}
+
+// Round a number to a given number of decimal places
+function roundnum(num, dp) {
+    let mult = Math.pow(10, dp);
+    let result = Math.round((num + Number.EPSILON) * mult) / mult;
+
+    if (result === 0) {
+        // Turn negative zero in to positive zero
+        return 0
+    }
+
+    return result;
+}
+
+// Colour the text of an element according to a give error value
+function colour_error(elem, error, dp) {
+    let rnderr = roundnum(error, dp);
+
+    switch (Math.sign(rnderr)) {
+        case -1:
+            elem.style.color = "red";
+            break;
+        case 0:
+            elem.style.color = "var(--text-color)";
+            break;
+        case 1:
+            elem.style.color = "green";
+            break;
+    }
 }
 
 // Percentage calculation and display

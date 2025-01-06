@@ -95,10 +95,11 @@ function initialise(msg) {
 
 function build_jstats(rstats) {
     // Chop reasons array
+    const rreasons = rstats.reasons;
     const reasons = [];
 
-    for (let i = 0; i < rstats.reasons.length; i += rstats.reasons_stride) {
-        reasons.push(rstats.reasons.subarray(i, i + rstats.reasons_stride));
+    for (let i = 0; i < rreasons.length; i += rstats.reasons_stride) {
+        reasons.push(rreasons.subarray(i, i + rstats.reasons_stride));
     }
 
     return {
