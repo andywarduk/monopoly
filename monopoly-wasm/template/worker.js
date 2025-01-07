@@ -48,12 +48,36 @@ init({ module_or_path: new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.h
                     console.debug("Got exec message", msg.data)
                 }
 
-                let rstats = board.run(msg.data.ticks);
+                const ticks = msg.data.ticks;
+                const chunk = msg.data.chunk;
+
+                // Mark start of run
+                let start_mark = `runStart${chunk}`
+                performance.mark(start_mark);
+
+                // Run the game
+                let rstats = board.run(ticks);
+
+                // Mark end of run
+                let end_mark = `runEnd${chunk}`
+                performance.mark(end_mark);
+
+                // Add measure
+                const elapsed = performance.measure(
+                    `run${chunk}`,
+                    {
+                        detail: { ticks: ticks },
+                        start: start_mark,
+                        end: end_mark,
+                    }
+                );
 
                 // Send stats back
                 postMessage({
                     msgtype: "execfin",
-                    stats: build_jstats(rstats),
+                    duration: elapsed.duration,
+                    jailwait: rstats.jailwait,
+                    stats: build_jstats(rstats, chunk),
                 });
 
                 break;
@@ -93,7 +117,7 @@ function initialise(msg) {
     postMessage(ret);
 }
 
-function build_jstats(rstats) {
+function build_jstats(rstats, chunk) {
     // Chop reasons array
     const rreasons = rstats.reasons;
     const reasons = [];
@@ -103,12 +127,12 @@ function build_jstats(rstats) {
     }
 
     return {
+        chunk: chunk,
         turns: rstats.turns,
         moves: rstats.moves,
         doubles: rstats.doubles,
         rollfreq: rstats.rollfreq,
         arrivals: rstats.arrivals,
         reasons: reasons,
-        jailwait: rstats.jailwait,
     }
 }

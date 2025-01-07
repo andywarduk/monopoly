@@ -1,7 +1,8 @@
 const debug = false; // Set to true to debug this script
 const workerdebug = false; // Set to true to debug worker
 
-const iterations = 10_000; // Number of iterations to perform in each chunk
+const iterations = 100_000; // Number of iterations to perform in each chunk
+let chunk = 0; // Rolling run number
 
 // Spinner state
 let spinner = true;
@@ -43,12 +44,12 @@ let percent_formatters = {};
 
         worker.onerror = (e) => {
             console.error("Worker raised an error:", e);
-            alert("Worker raised an error");
+            alert("Worker raised an error: " + e.message);
         }
 
         worker.onmessageerror = (e) => {
             console.error("Worker raised a message error:", e);
-            alert("Worker raised a message error");
+            alert("Worker raised a message error: " + e.message);
         }
 
         worker.onmessage = process_worker_message;
@@ -109,7 +110,7 @@ function process_worker_message(msg) {
 
             // Start worker executing
             if (!paused) {
-                worker.postMessage({ msgtype: "exec", ticks: iterations });
+                worker_execute();
             }
 
             break;
@@ -120,14 +121,34 @@ function process_worker_message(msg) {
                 console.debug("Got 'execfin' from worker:", msg.data);
             }
 
-            if (!paused && !spinner) {
-                // Execute next chunk
-                worker.postMessage({ msgtype: "exec", ticks: iterations });
+            // Make sure these stats are for the strategy mode we're currently in
+            if (msg.data.jailwait != jailwait) {
+                console.warn("Rejecting stats for incorrect strategy");
+                break;
             }
 
-            // Process the stats
+            // Save stats
             last_stats = msg.data.stats;
-            process_stats(last_stats);
+
+            // Extract chunk
+            const cur_chunk = last_stats.chunk;
+
+            if (!paused && !spinner) {
+                // Auto-pause every 100,000,000
+                if ((last_stats.turns % 100_000_000n) == 0) {
+                    pause_click();
+                } else {
+                    // Execute next chunk
+                    worker_execute();
+                }
+            }
+
+            // Mark time before requesting animation
+            const rq_mark = `requestAnimation${cur_chunk}`;
+            performance.mark(rq_mark);
+
+            // Request animation frame to update the page
+            requestAnimationFrame((ts) => { animationFrame(ts, cur_chunk) });
 
             break;
 
@@ -147,6 +168,12 @@ function worker_init(first) {
 
     // Tell worker to (re)initialise
     worker.postMessage({ msgtype: (first ? "init" : "reinit"), jailwait: jailwait, debug: workerdebug })
+}
+
+// Get the worker to execute a chunk
+function worker_execute() {
+    chunk += 1;
+    worker.postMessage({ msgtype: "exec", ticks: iterations, chunk: chunk });
 }
 
 // Set up board spaces with data returned from worker initialisation
@@ -463,22 +490,54 @@ function space_code_to_description(code, show_elem) {
     return "<Unknown>";
 }
 
-// Processes statistics returned by game tick
-function process_stats(stats) {
-    // Make sure these stats are for the mode we're currently in
-    if (stats.jailwait != jailwait) {
-        console.warn("Rejecting stats for incorrect mode");
-        return;
+// requestAnimationFrame callback
+function animationFrame(ts, rq_chunk) {
+    // Get chunk number from current stats
+    const cur_chunk = last_stats.chunk;
+
+    // Is this the animation callback for the current stats?
+    if (cur_chunk != rq_chunk) {
+        return
     }
 
+    // Build animation request performance marker name
+    const rq_mark = `requestAnimation${cur_chunk}`;
+
+    // Mark time at start of animation
+    const start_mark = `pageUpdateStart${cur_chunk}`;
+    performance.mark(start_mark);
+
+    // Add performance measure for time between requesting animation and getting it
+    performance.measure(
+        `getAnimationFrame${cur_chunk}`,
+        {
+            start: rq_mark,
+            end: start_mark,
+        }
+    );
+
+    // Process the statistics
+    process_stats(last_stats);
+
+    // Mark time at end of animation
+    const end_mark = `pageUpdateEnd${cur_chunk}`;
+    performance.mark(end_mark);
+
+    // Add performance measure for time to update the page
+    performance.measure(
+        `pageUpdate${cur_chunk}`,
+        {
+            start: start_mark,
+            end: end_mark,
+        }
+    );
+}
+
+// Processes statistics returned by game tick
+function process_stats(stats) {
     update_games_stats(stats);
     update_percentages_and_leaderboard(stats);
     update_roll_frequencies(stats);
-
-    // Auto-pause at 100,000,000
-    if (((stats.turns + BigInt(iterations)) % 100_000_000n) == 0) {
-        pause_click();
-    }
 }
 
 // Update game staistics from passed stats
@@ -951,7 +1010,7 @@ function pause_click() {
     update_pause_button();
 
     if (!paused) {
-        worker.postMessage({ msgtype: "exec", ticks: iterations });
+        worker_execute();
     }
 }
 
