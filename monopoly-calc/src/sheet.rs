@@ -1,43 +1,58 @@
 use std::error::Error;
 
-use monopoly_lib::{calc::transmatrix::TransMatrix, space::SPACES};
+use monopoly_lib::{
+    calc::{probability::Probability, transmatrix::TransMatrix},
+    space::SPACES,
+};
 use nalgebra::Matrix;
 use num_traits::NumCast;
-use rust_xlsxwriter::Workbook;
+use rust_xlsxwriter::{IntoExcelData, Workbook};
 
 pub fn write_prob_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix, float: bool) -> Result<(), Box<dyn Error>> {
-    write_matrix_sheet(book, name, mat.combinedmat(), Some(mat.states().keys()), Some(mat.states().keys()), |p| {
-        if float { p.as_f64().to_string() } else { p.to_string() }
-    })?;
-
-    Ok(())
+    write_matrix_prob_sheet(book, name, mat.combinedmat(), Some(mat.states().keys()), Some(mat.states().keys()), float)
 }
 
 pub fn write_move_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix, float: bool) -> Result<(), Box<dyn Error>> {
-    write_matrix_sheet(book, name, mat.movemat(), Some(mat.states().keys()), Some(mat.states().keys()), |p| {
-        if float { p.as_f64().to_string() } else { p.to_string() }
-    })?;
-
-    Ok(())
+    write_matrix_prob_sheet(book, name, mat.movemat(), Some(mat.states().keys()), Some(mat.states().keys()), float)
 }
 
 pub fn write_jump_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix, float: bool) -> Result<(), Box<dyn Error>> {
     let iter = SPACES.iter().map(|s| s.shortdesc());
 
-    write_matrix_sheet(book, name, mat.jumpmat(), Some(iter.clone()), Some(iter), |p| {
-        if float { p.as_f64().to_string() } else { p.to_string() }
-    })?;
-
-    Ok(())
+    write_matrix_prob_sheet(book, name, mat.jumpmat(), Some(iter.clone()), Some(iter), float)
 }
 
 pub fn write_steady_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix) -> Result<(), Box<dyn Error>> {
-    write_matrix_sheet(book, name, mat.steady(), Some(mat.states().keys()), None::<Vec<bool>>, |p| p.to_string())?;
+    write_matrix_sheet(book, name, mat.steady(), Some(mat.states().keys()), None::<Vec<bool>>, |p| p.to_string())
+}
+
+pub fn write_matrix_prob_sheet<R, C, S, RH, CH>(
+    book: &mut Workbook,
+    name: &str,
+    matrix: &Matrix<Probability, R, C, S>,
+    colheaders: Option<CH>,
+    rowheaders: Option<RH>,
+    float: bool,
+) -> Result<(), Box<dyn Error>>
+where
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::storage::Storage<Probability, R, C>,
+    RH: IntoIterator + Clone,
+    RH::Item: std::fmt::Display,
+    CH: IntoIterator + Clone,
+    CH::Item: std::fmt::Display,
+{
+    if float {
+        write_matrix_sheet(book, name, matrix, colheaders, rowheaders, |p| p.as_f64())?;
+    } else {
+        write_matrix_sheet(book, name, matrix, colheaders, rowheaders, |p| p.to_string())?;
+    }
 
     Ok(())
 }
 
-pub fn write_matrix_sheet<T, R, C, S, RH, CH, F>(
+pub fn write_matrix_sheet<T, R, C, S, RH, CH, F, FR>(
     book: &mut Workbook,
     name: &str,
     matrix: &Matrix<T, R, C, S>,
@@ -54,7 +69,8 @@ where
     RH::Item: std::fmt::Display,
     CH: IntoIterator + Clone,
     CH::Item: std::fmt::Display,
-    F: Fn(&T) -> String,
+    F: Fn(&T) -> FR,
+    FR: IntoExcelData,
 {
     let sheet = book.add_worksheet().set_name(name)?;
 
@@ -92,14 +108,14 @@ where
     // Write data rows
     for (y, row) in matrix.row_iter().enumerate() {
         for (x, prob) in row.iter().enumerate() {
-            sheet.write_string((y + yoffset) as u32, (x + xoffset) as u16, format(prob))?;
+            sheet.write((y + yoffset) as u32, (x + xoffset) as u16, format(prob))?;
         }
     }
 
     Ok(())
 }
 
-pub fn write_summary_sheet<T, R, C, S, H, F>(
+pub fn write_summary_sheet<T, R, C, S, H, F, FR>(
     book: &mut Workbook,
     rowheaders: H,
     matrix: &Matrix<T, R, C, S>,
@@ -113,7 +129,8 @@ where
     S: nalgebra::storage::Storage<T, R, C>,
     H: IntoIterator + Clone,
     H::Item: std::fmt::Display,
-    F: Fn(&H::Item) -> String,
+    F: Fn(&H::Item) -> FR,
+    FR: IntoExcelData,
 {
     let sheet = book.add_worksheet().set_name(name)?;
 
@@ -123,7 +140,7 @@ where
 
     // Write headers
     for (y, header) in rowheaders.into_iter().enumerate() {
-        sheet.write_string((y + 1) as u32, 0, format(&header))?;
+        sheet.write((y + 1) as u32, 0, format(&header))?;
     }
 
     for (y, value) in matrix.iter().enumerate() {

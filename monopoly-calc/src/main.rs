@@ -2,7 +2,7 @@ use std::{error::Error, path::Path};
 
 use clap::Parser;
 use cli::Cli;
-use console::print_summary;
+use console::{print_steady, print_summary};
 use csv::{write_jump_csv, write_move_csv, write_prob_csv, write_steady_csv, write_summary_csv};
 use monopoly_lib::calc::transmatrix::TransMatrix;
 use monopoly_lib::space::SPACES;
@@ -137,6 +137,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_jump_csv(Path::new("csv/jump_flt.csv"), &wait_map, true)?;
 
     // -- Console output --
+
+    if cli.debug {
+        print_steady(&pay_map, "pay steady state");
+        print_steady(&wait_map, "wait steady state");
+    }
 
     // Write summary by space for pay strategy
     print_summary(pay_space_headings, pay_space_mat, "Probablility by position (pay)", |p| {

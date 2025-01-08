@@ -1,4 +1,4 @@
 mod dice;
-mod probability;
+pub mod probability;
 mod state;
 pub mod transmatrix;
