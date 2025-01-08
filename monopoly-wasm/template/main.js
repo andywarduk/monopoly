@@ -88,7 +88,7 @@ function process_worker_message(msg) {
 
             if (msg.data.msgtype == "initfin") {
                 // Set up the board after first initialise
-                setup_board(msg.data);
+                setup_page(msg.data);
             }
 
             // Get worker to calculate expected frequencies
@@ -188,7 +188,7 @@ function worker_exec_stop() {
 }
 
 // Set up board spaces with data returned from worker initialisation
-function setup_board(data) {
+function setup_page(data) {
     // Save space data
     space_codes = data.spaces;
 
@@ -198,6 +198,12 @@ function setup_board(data) {
     // Save arrival reason descriptions
     arrival_reason_descs = data.arrival_reasons;
 
+    setup_board();
+    setup_rolltable();
+    setup_buttons();
+}
+
+function setup_board() {
     // Create the board
     let table = document.getElementById("board_tab");
 
@@ -239,7 +245,52 @@ function setup_board(data) {
     }
 
     tbody.appendChild(tr);
+}
 
+function setup_rolltable() {
+    const div = document.getElementById("rolltable_cols");
+
+    for (let i = 2; i <= 12; i++) {
+        const col = document.createElement("div");
+        col.setAttribute("class", "rolltable_col");
+
+        // Create number para
+        const num = document.createElement("p");
+        num.innerText = i;
+
+        col.appendChild(num);
+
+        // Create bar graph bar
+        const bar_container = document.createElement("div");
+        bar_container.setAttribute("class", "rollgraphbar");
+
+        const bar = document.createElement("div");
+        bar.setAttribute("class", "rollgraphval greenbg");
+        bar.setAttribute("id", `rollgraph${i}`);
+
+        bar_container.appendChild(bar);
+
+        col.appendChild(bar_container);
+
+        // Create roll percentage
+        const pct = document.createElement("p");
+        pct.setAttribute("class", "rollpct");
+        pct.setAttribute("id", `rollpct${i}`);
+
+        col.appendChild(pct);
+
+        // Create roll percentage error
+        const pcterr = document.createElement("p");
+        pcterr.setAttribute("class", "rollpct");
+        pcterr.setAttribute("id", `rollpcterr${i}`);
+
+        col.appendChild(pcterr);
+
+        div.appendChild(col);
+    }
+}
+
+function setup_buttons() {
     // Set up pause/play button
     update_pause_button();
 

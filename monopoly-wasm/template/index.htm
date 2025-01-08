@@ -25,90 +25,14 @@
         <div class="main_col1">
             <!-- Board table -->
             <table id="board_tab" class="board_tab">
+                <!-- Generated board goes here -->
             </table>
 
             <!-- Roll frequency -->
-            <h3>Roll Frequency:</h3>
+            <h3 class="rollfreq_title">Roll Frequency:</h3>
 
-            <div>
-                <table class="rolltable">
-                    <tbody>
-                        <tr>
-                            <td>2</td>
-                            <td>3</td>
-                            <td>4</td>
-                            <td>5</td>
-                            <td>6</td>
-                            <td>7</td>
-                            <td>8</td>
-                            <td>9</td>
-                            <td>10</td>
-                            <td>11</td>
-                            <td>12</td>
-                        </tr>
-                        <tr>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph2"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph3"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph4"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph5"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph6"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph7"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph8"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph9"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph10"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph11"></div>
-                            </td>
-                            <td class="rollgraphbar">
-                                <div class="rollgraphval greenbg" id="rollgraph12"></div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td id="rollpct2" class="rollpct"></td>
-                            <td id="rollpct3" class="rollpct"></td>
-                            <td id="rollpct4" class="rollpct"></td>
-                            <td id="rollpct5" class="rollpct"></td>
-                            <td id="rollpct6" class="rollpct"></td>
-                            <td id="rollpct7" class="rollpct"></td>
-                            <td id="rollpct8" class="rollpct"></td>
-                            <td id="rollpct9" class="rollpct"></td>
-                            <td id="rollpct10" class="rollpct"></td>
-                            <td id="rollpct11" class="rollpct"></td>
-                            <td id="rollpct12" class="rollpct"></td>
-                        </tr>
-                        <tr>
-                            <td id="rollpcterr2" class="rollpct"></td>
-                            <td id="rollpcterr3" class="rollpct"></td>
-                            <td id="rollpcterr4" class="rollpct"></td>
-                            <td id="rollpcterr5" class="rollpct"></td>
-                            <td id="rollpcterr6" class="rollpct"></td>
-                            <td id="rollpcterr7" class="rollpct"></td>
-                            <td id="rollpcterr8" class="rollpct"></td>
-                            <td id="rollpcterr9" class="rollpct"></td>
-                            <td id="rollpcterr10" class="rollpct"></td>
-                            <td id="rollpcterr11" class="rollpct"></td>
-                            <td id="rollpcterr12" class="rollpct"></td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div id="rolltable_cols" class="rolltable_cols">
+                <!-- Generated leaderboard goes here -->
             </div>
         </div>
 
@@ -167,8 +91,6 @@
                     </tbody>
                 </table>
 
-                <br />
-
                 <div class="leaderboard_title_div">
                     <h3 class="leaderboard_title">Leaderboard:</h3>
                     <!-- Split jail statistics button -->
@@ -178,7 +100,7 @@
                     <button class="greenbg" id="fullboard"></button>
                 </div>
 
-                <table>
+                <table class="leaderboard">
                     <thead>
                         <tr>
                             <th style="text-align: left;">Space</th>
@@ -188,7 +110,9 @@
                             <th style="text-align: right;">Error</th>
                         </tr>
                     </thead>
-                    <tbody id="leaderboard"></tbody>
+                    <tbody id="leaderboard">
+                        <!-- Generated leaderboard goes here -->
+                    </tbody>
                 </table>
             </div>
         </div>

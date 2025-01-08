@@ -136,11 +136,15 @@ body {
     border-radius: 20px;
 }
 
-
 /* Statistics block */
 .stats {
-    margin-top: 8px;
+    /* margin-top: 8px; */
     margin-left: 4px;
+}
+
+.stats_title {
+    margin-top: 16px;
+    margin-bottom: 4px;
 }
 
 /* Statistic value */
@@ -159,16 +163,16 @@ body {
     min-width: 100px;
 }
 
+/* Statistic percentage */
+.statlabel {
+    min-width: 205px;
+}
+
 /* Arrival reason leaderboard entry */
 .substat {
     font-size: 80%;
     line-height: 1.2;
     color: var(--text-color-dim);
-}
-
-/* Statistic percentage */
-.statlabel {
-    min-width: 205px;
 }
 
 /* Arrival reason statistic description */
@@ -185,15 +189,7 @@ body {
     margin-right: 2px;
 }
 
-/* Button bar */
-.buttons {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
+/* button style */
 button {
     border-width: 1px;
     border-style: solid;
@@ -206,30 +202,59 @@ button:hover {
     color: white;
 }
 
+/* Button bar */
+.buttons {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
 .buttons button {
     width: 200px;
     padding-top: 10px;
     padding-bottom: 10px;
 }
 
+/* Leaderboard title */
 .leaderboard_title_div {
     display: flex;
     gap: 8px;
+    margin-top: 16px;
+    margin-bottom: 4px;
 }
 
 .leaderboard_title {
     flex-grow: 1;
 }
 
-.rolltable {
+.leaderboard {
+    margin-left: 4px;
+}
+
+/* Roll frequency table */
+.rollfreq_title {
+    margin-top: 16px;
+    margin-bottom: 8px;
+}
+
+.rolltable_cols {
+    display: flex;
+    flex-direction: row;
+    align-content: stretch;
+}
+
+.rolltable_col {
     text-align: center;
+    flex: 1;
 }
 
 .rollgraphbar {
-    width: 77px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
     height: 150px;
-    padding: 0;
-    vertical-align: bottom;
 }
 
 .rollgraphval {
