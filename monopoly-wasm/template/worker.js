@@ -4,81 +4,75 @@ console.debug("Worker started");
 // Load the WASM linkage
 import init, { create_board, get_expected_frequencies } from "$link(prefix=./|../pkg/monopoly_wasm.js)";
 
+import { perf_now, perf_end } from "$link(perf.js)";
+
 // Debugging flag
 let debug = false;
 
 // Game board
 let board;
 
+// Executing flag
+let executing = false;
+
+// Execution target
+let exec_target;
+
+// Execution chunk size
+let exec_chunk_size;
+
+// Time to run for in milliseconds
+const run_ms = 100;
+
 // Initialise the WASM module
 init({ module_or_path: new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.href) }).then(() => {
     // Set up message handler
     onmessage = (msg) => {
-        switch (msg.data.msgtype) {
+        const msgtype = msg.data.msgtype;
+        switch (msgtype) {
             case "init":
             case "reinit":
-                // Initialise
-                if (msg.data.msgtype == "init") {
+                // Initialise debugging
+                if (msgtype == "init") {
                     debug = msg.data.debug;
                 }
 
                 if (debug) {
-                    console.debug(`Got ${msg.data.msgtype} message`, msg.data)
+                    console.debug(`Got ${msgtype} message`, msg.data)
                 }
 
+                // (Re-)initialise
                 initialise(msg.data);
 
                 break;
 
             case "calcexpected":
+                // Calculate expected frequencies
                 if (debug) {
                     console.debug("Got calcexpected message", msg.data)
                 }
 
-                postMessage({
-                    msgtype: "calcexpectedfin",
-                    freq: get_expected_frequencies(msg.data.jailwait)
-                });
+                calc_expected(msg.data);
 
                 break;
 
-            case "exec":
-                // Execute
+            case "execstart":
+                // Start execution
                 if (debug) {
-                    console.debug("Got exec message", msg.data)
+                    console.debug("Got execstart message", msg.data)
                 }
 
-                const ticks = msg.data.ticks;
-                const chunk = msg.data.chunk;
+                exec_start(msg.data);
 
-                // Mark start of run
-                let start_mark = `runStart${chunk}`
-                performance.mark(start_mark);
+                break;
 
-                // Run the game
-                let rstats = board.run(ticks);
+            case "execstop":
+                // Stop execution
+                if (debug) {
+                    console.debug("Got execstop message", msg.data)
+                }
 
-                // Mark end of run
-                let end_mark = `runEnd${chunk}`
-                performance.mark(end_mark);
-
-                // Add measure
-                const elapsed = performance.measure(
-                    `run${chunk}`,
-                    {
-                        detail: { ticks: ticks },
-                        start: start_mark,
-                        end: end_mark,
-                    }
-                );
-
-                // Send stats back
-                postMessage({
-                    msgtype: "execfin",
-                    duration: elapsed.duration,
-                    jailwait: rstats.jailwait,
-                    stats: build_jstats(rstats, chunk),
-                });
+                exec_stop();
 
                 break;
 
@@ -100,6 +94,12 @@ init({ module_or_path: new URL("$link(../pkg/monopoly_wasm_bg.wasm)", location.h
 });
 
 function initialise(msg) {
+    // Stop executing if necessary
+    exec_stop();
+
+    // Set target to zero
+    exec_target = 0;
+
     // Create the board
     board = create_board(msg.jailwait);
 
@@ -117,7 +117,80 @@ function initialise(msg) {
     postMessage(ret);
 }
 
-function build_jstats(rstats, chunk) {
+function exec_stop() {
+    executing = false;
+}
+
+function exec_start(msg) {
+    // Set execution target
+    exec_target = msg.target_turns;
+    exec_chunk_size = msg.chunk_size;
+    executing = true;
+    setTimeout(exec_chunk, 0);
+}
+
+function exec_chunk() {
+    // Start timer
+    const start_time = perf_now();
+
+    let cur_turns = board.get_turns();
+
+    while (true) {
+        // Calculate number of iterations to perform
+        const turns_left = Number(BigInt(exec_target) - cur_turns);
+        const turns = Math.min(turns_left, exec_chunk_size);
+
+        let stop = true;
+
+        if (turns > 0) {
+            // Start timer
+            const run_start_time = perf_now();
+
+            // Run the game
+            const rstats = board.run(turns);
+
+            // Log performance
+            perf_end(`chunkExec${rstats.turns}`, run_start_time);
+
+            // Autopause?
+            cur_turns = rstats.turns;
+
+            if (cur_turns < exec_target) {
+                stop = false;
+            }
+
+            // Send stats back
+            postMessage({
+                msgtype: "execfin",
+                jailwait: rstats.jailwait,
+                paused: stop,
+                stats: build_jstats(rstats)
+            });
+        }
+
+        // Need to stop?
+        if (stop) {
+            exec_stop();
+            break;
+        }
+
+        // Use up time slot?
+        const time_now = perf_now();
+
+        if (time_now - start_time >= run_ms) {
+            break;
+        }
+    }
+
+    if (executing) {
+        setTimeout(exec_chunk, 0);
+    }
+
+    // Log performance
+    perf_end("intervalCallback", start_time);
+}
+
+function build_jstats(rstats) {
     // Chop reasons array
     const rreasons = rstats.reasons;
     const reasons = [];
@@ -127,7 +200,6 @@ function build_jstats(rstats, chunk) {
     }
 
     return {
-        chunk: chunk,
         turns: rstats.turns,
         moves: rstats.moves,
         doubles: rstats.doubles,
@@ -135,4 +207,20 @@ function build_jstats(rstats, chunk) {
         arrivals: rstats.arrivals,
         reasons: reasons,
     }
+}
+
+function calc_expected(msg) {
+    // Mark start of run
+    let start_time = perf_now();
+
+    const freqs = get_expected_frequencies(msg.jailwait);
+
+    // Mark end of run and measure
+    const elapsed = perf_end("calcExpected", start_time);
+
+    postMessage({
+        msgtype: "calcexpectedfin",
+        freq: freqs,
+        duration: elapsed.duration,
+    });
 }

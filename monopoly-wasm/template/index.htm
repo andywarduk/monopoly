@@ -6,9 +6,11 @@
     <title>Monopoly Probabilities</title>
     <link rel="icon" type="image/x-icon" href="$link(favicon.ico)">
     <link rel="stylesheet" type="text/css" href="$link(styles.css)" />
+    <link rel="stylesheet" type="text/css" href="$link(board.css)" />
 </head>
 
 <body style="overflow: hidden;">
+    <!-- Loading overlay -->
     <div id="loading" class="spinner_row">
         <div class="spinner_col">
             <div class="spinner"></div>
@@ -19,97 +21,11 @@
         </div>
     </div>
 
-    <div id="main" style="display: none;">
-        <div class="board_div">
+    <div id="main" class="main" style="display: none;">
+        <div class="main_col1">
             <!-- Board table -->
-            <table class="board_tab">
-                <tbody>
-                    <tr>
-                        <td id="0" class="space_cell greenbg"></td>
-                        <td id="1" class="space_cell greenbg"></td>
-                        <td id="2" class="space_cell greenbg"></td>
-                        <td id="3" class="space_cell greenbg"></td>
-                        <td id="4" class="space_cell greenbg"></td>
-                        <td id="5" class="space_cell greenbg"></td>
-                        <td id="6" class="space_cell greenbg"></td>
-                        <td id="7" class="space_cell greenbg"></td>
-                        <td id="8" class="space_cell greenbg"></td>
-                        <td id="9" class="space_cell greenbg"></td>
-                        <td id="10" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="39" class="space_cell greenbg"></td>
-                        <td colspan="9" rowspan="9">
-                            <div class="title_div">
-                                <div class="title_border">
-                                    <h1 class="title">MONOPOLY</h1>
-                                </div>
-                            </div>
-                        </td>
-                        <td id="11" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="38" class="space_cell greenbg"></td>
-                        <td id="12" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="37" class="space_cell greenbg"></td>
-                        <td id="13" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="36" class="space_cell greenbg"></td>
-                        <td id="14" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="35" class="space_cell greenbg"></td>
-                        </td>
-                        <td id="15" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="34" class="space_cell greenbg"></td>
-                        <td id="16" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="33" class="space_cell greenbg"></td>
-                        <td id="17" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="32" class="space_cell greenbg"></td>
-                        <td id="18" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="31" class="space_cell greenbg"></td>
-                        <td id="19" class="space_cell greenbg"></td>
-                    </tr>
-                    <tr>
-                        <td id="30" class="space_cell greenbg"></td>
-                        <td id="29" class="space_cell greenbg"></td>
-                        <td id="28" class="space_cell greenbg"></td>
-                        <td id="27" class="space_cell greenbg"></td>
-                        <td id="26" class="space_cell greenbg"></td>
-                        <td id="25" class="space_cell greenbg"></td>
-                        <td id="24" class="space_cell greenbg"></td>
-                        <td id="23" class="space_cell greenbg"></td>
-                        <td id="22" class="space_cell greenbg"></td>
-                        <td id="21" class="space_cell greenbg"></td>
-                        <td id="20" class="space_cell greenbg"></td>
-                    </tr>
-                </tbody>
+            <table id="board_tab" class="board_tab">
             </table>
-
-            <div class="buttons">
-                <!-- Pause / play button -->
-                <button class="greenbg" id="pause"></button>
-
-                <!-- Split jail statistics button -->
-                <button class="greenbg" id="splitjail"></button>
-
-                <!-- Full leaderboard -->
-                <button class="greenbg" id="fullboard"></button>
-
-                <!-- Strategy -->
-                <button class="greenbg" id="strategy"></button>
-            </div>
 
             <!-- Roll frequency -->
             <h3>Roll Frequency:</h3>
@@ -196,67 +112,87 @@
             </div>
         </div>
 
-        <div class="stats">
-            <h3>Game statistics:</h3>
-            <table>
-                <tbody>
-                    <tr>
-                        <td class="statlabel">Turns taken:</td>
-                        <td id="stat_turns" class="stat"></td>
-                    </tr>
-                    <tr class="substat">
-                        <td class="statlabel">Single move turns:</td>
-                        <td id="stat_turns_single" class="stat"></td>
-                        <td id="stat_turns_single_pct" class="statpct"></td>
-                    </tr>
-                    <tr class="substat">
-                        <td class="statlabel">Double move turns:</td>
-                        <td id="stat_turns_double" class="stat"></td>
-                        <td id="stat_turns_double_pct" class="statpct"></td>
-                    </tr>
-                    <tr class="substat">
-                        <td class="statlabel">Triple move turns:</td>
-                        <td id="stat_turns_triple" class="stat"></td>
-                        <td id="stat_turns_triple_pct" class="statpct"></td>
-                    </tr>
-                    <tr class="substat">
-                        <td class="statlabel">Double double turns:</td>
-                        <td id="stat_ddoubles" class="stat"></td>
-                        <td id="stat_ddoubles_pct" class="statpct"></td>
-                    </tr>
-                    <tr class="substat">
-                        <td class="statlabel">Triple double turns:</td>
-                        <td id="stat_tdoubles" class="stat"></td>
-                        <td id="stat_tdoubles_pct" class="statpct"></td>
-                    </tr>
-                    <tr>
-                        <td class="statlabel">Moves made:</td>
-                        <td id="stat_moves" class="stat"></td>
-                    </tr>
-                    <tr class="substat">
-                        <td class="statlabel">Moves from double:</td>
-                        <td id="stat_doubles_tot" class="stat"></td>
-                        <td id="stat_doubles_tot_pct" class="statpct"></td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="main_col2">
+            <div class="buttons">
+                <!-- Pause / play button -->
+                <button class="greenbg" id="pause"></button>
 
-            <br />
+                <!-- Strategy -->
+                <button class="greenbg" id="strategy"></button>
+            </div>
 
-            <h3>Leaderboard:</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="text-align: left;">Space</th>
-                        <th style="text-align: right;">Arrivals</th>
-                        <th style="text-align: right;">Percentage</th>
-                        <th style="text-align: right;">Expected</th>
-                        <th style="text-align: right;">Error</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboard"></tbody>
-            </table>
+            <h3 class="stats_title">Game statistics:</h3>
+
+            <div class="stats">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td class="statlabel">Turns taken:</td>
+                            <td id="stat_turns" class="stat"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Single move turns:</td>
+                            <td id="stat_turns_single" class="stat"></td>
+                            <td id="stat_turns_single_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Double move turns:</td>
+                            <td id="stat_turns_double" class="stat"></td>
+                            <td id="stat_turns_double_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Triple move turns:</td>
+                            <td id="stat_turns_triple" class="stat"></td>
+                            <td id="stat_turns_triple_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Double double turns:</td>
+                            <td id="stat_ddoubles" class="stat"></td>
+                            <td id="stat_ddoubles_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Triple double turns:</td>
+                            <td id="stat_tdoubles" class="stat"></td>
+                            <td id="stat_tdoubles_pct" class="statpct"></td>
+                        </tr>
+                        <tr>
+                            <td class="statlabel">Moves made:</td>
+                            <td id="stat_moves" class="stat"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Moves from double:</td>
+                            <td id="stat_doubles_tot" class="stat"></td>
+                            <td id="stat_doubles_tot_pct" class="statpct"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <br />
+
+                <div class="leaderboard_title_div">
+                    <h3 class="leaderboard_title">Leaderboard:</h3>
+                    <!-- Split jail statistics button -->
+                    <button class="greenbg" id="splitjail"></button>
+
+                    <!-- Full leaderboard -->
+                    <button class="greenbg" id="fullboard"></button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Space</th>
+                            <th style="text-align: right;">Arrivals</th>
+                            <th style="text-align: right;">Arrival %</th>
+                            <th style="text-align: right;">Expected</th>
+                            <th style="text-align: right;">Error</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard"></tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 
     <!-- Load the main script -->

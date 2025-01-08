@@ -36,6 +36,11 @@
     margin: 0;
 }
 
+table {
+    /* Collapse table borders by default */
+    border-collapse: collapse;
+}
+
 body {
     /* Add accessible line-height */
     line-height: 1.5;
@@ -47,6 +52,7 @@ body {
     color: var(--text-color);
 }
 
+/* Item with monopoly green background */
 .greenbg {
     background-color: rgb(169, 247, 169);
     color: var(--text-color);
@@ -57,11 +63,6 @@ body {
     .greenbg {
         background-color: rgb(20, 147, 20);
     }
-}
-
-table {
-    /* Collapse table borders by default */
-    border-collapse: collapse;
 }
 
 .spinner_row {
@@ -102,9 +103,12 @@ table {
     }
 }
 
-/* Board styles */
-.board_div {
-    margin: 20px;
+/* Main grid */
+.main {
+    /* set to this by js code: display: flex; */
+    flex-direction: row;
+    gap: 8px;
+    padding: 8px;
 }
 
 /* Title styles */
@@ -132,163 +136,11 @@ table {
     border-radius: 20px;
 }
 
-/* Space table cell */
-.space_cell {
-    border-width: 2px;
-    border-style: solid;
-    border-color: black;
-    font-size: 10px;
-    text-align: center;
-    padding: 0;
-}
-
-/* Relative div inside table cell */
-.space_reldiv {
-    position: relative;
-}
-
-/* Top and bottom are 100 high and 70 wide */
-.space_reldiv_tb {
-    height: 100px;
-    min-height: 100px;
-    width: 70px;
-    min-width: 70px;
-}
-
-/* Left and right are 70 high and 100 wide */
-.space_reldiv_lr {
-    height: 70px;
-    min-height: 70px;
-    width: 100px;
-    min-width: 100px;
-}
-
-/* Corners are 100 high and 100 wide */
-.space_reldiv_c {
-    height: 100px;
-    min-height: 100px;
-    width: 100px;
-    min-width: 100px;
-}
-
-/* Content cell rotated in to place - columner flex box*/
-.space_div {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-}
-
-/* Edges are 100 high and 70 wide */
-.space_div_tb,
-.space_div_lr {
-    height: 100px;
-    min-height: 100px;
-    width: 70px;
-    min-width: 70px;
-}
-
-/* Corners are 100 high and 100 wide */
-.space_div_c {
-    height: 100px;
-    min-height: 100px;
-    width: 100px;
-    min-width: 100px;
-}
-
-/* North edges rotated 180 degrees */
-.space_div_n {
-    transform: rotate(180deg);
-}
-
-/* East edges rotated -90 degrees */
-.space_div_e {
-    transform: translate(15px, -15px) rotate(-90deg);
-}
-
-/* West edges rotated 90 degrees */
-.space_div_w {
-    transform: translate(15px, -15px) rotate(90deg);
-}
-
-/* North west corner rotated 135 degrees */
-.space_div_nw {
-    transform: rotate(135deg);
-    height: 90%;
-}
-
-/* North east corner rotated 225 degrees */
-.space_div_ne {
-    transform: rotate(225deg);
-    height: 90%;
-}
-
-/* South east corner rotated 315 degrees */
-.space_div_se {
-    transform: rotate(315deg);
-    height: 90%;
-}
-
-/* South west corner rotated 45 degrees */
-.space_div_sw {
-    transform: rotate(45deg);
-    height: 90%;
-}
-
-/* Make property name wrap nicely in SE corner */
-.space_div_se>.propname {
-    margin-left: 30%;
-    margin-right: 30%;
-}
-
-/* Make property name wrap nicely in SW corner */
-.space_div_sw>.propname {
-    margin-left: 30%;
-    margin-right: 30%;
-}
-
-/* Property colour block */
-.colour_block {
-    height: 20px;
-    border-bottom-width: 2px;
-    border-bottom-style: solid;
-    border-bottom-color: black;
-}
-
-@media (prefers-color-scheme: dark) {
-    .colour_block {
-        filter: brightness(0.8);
-    }
-}
-
-/* Property name */
-.propname {
-    padding-left: 2px;
-    padding-right: 2px;
-    hyphens: manual;
-}
-
-/* Property icon */
-.icon {
-    font-size: 40px;
-    line-height: 1;
-}
-
-/* Property arrival percentage */
-.pct_span {
-    margin-bottom: 2px;
-    border-radius: 5px;
-    padding-left: 4px;
-    padding-right: 4px;
-    font-family: Arial, Helvetica, sans-serif;
-    font-weight: bold;
-    font-size: 12px;
-    color: black;
-}
 
 /* Statistics block */
 .stats {
-    margin-top: 20px;
+    margin-top: 8px;
+    margin-left: 4px;
 }
 
 /* Statistic value */
@@ -316,7 +168,7 @@ table {
 
 /* Statistic percentage */
 .statlabel {
-    min-width: 210px;
+    min-width: 205px;
 }
 
 /* Arrival reason statistic description */
@@ -333,28 +185,40 @@ table {
     margin-right: 2px;
 }
 
-/* button bar */
+/* Button bar */
 .buttons {
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+button {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--bg-color-inv);
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: darkgreen;
+    color: white;
 }
 
 .buttons button {
     width: 200px;
-    border-width: 1px;
-    border-style: solid;
-    border-color: var(--bg-color-inv);
     padding-top: 10px;
     padding-bottom: 10px;
-    margin-top: 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
 }
 
-.buttons button:hover {
-    background-color: darkgreen;
-    color: white;
+.leaderboard_title_div {
+    display: flex;
+    gap: 8px;
+}
+
+.leaderboard_title {
+    flex-grow: 1;
 }
 
 .rolltable {
@@ -363,7 +227,7 @@ table {
 
 .rollgraphbar {
     width: 77px;
-    height: 77px;
+    height: 150px;
     padding: 0;
     vertical-align: bottom;
 }

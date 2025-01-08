@@ -1,8 +1,11 @@
+import { perf_now, perf_end, perf_mark } from "$link(perf.js)";
+
 const debug = false; // Set to true to debug this script
 const workerdebug = false; // Set to true to debug worker
 
-const iterations = 100_000; // Number of iterations to perform in each chunk
-let chunk = 0; // Rolling run number
+const turn_chunk = 100_000; // Number of iterations to perform in each chunk
+const autopause = 100_000_000; // Number of iterations before automatically pausing
+let turn_target; // Next iteration target
 
 // Spinner state
 let spinner = true;
@@ -108,9 +111,11 @@ function process_worker_message(msg) {
             // Hide spinner
             spinner_show(false);
 
-            // Start worker executing
+            // Start worker executing to first autopause target
+            turn_target = autopause;
+
             if (!paused) {
-                worker_execute();
+                worker_exec_start();
             }
 
             break;
@@ -130,25 +135,26 @@ function process_worker_message(msg) {
             // Save stats
             last_stats = msg.data.stats;
 
-            // Extract chunk
-            const cur_chunk = last_stats.chunk;
-
-            if (!paused && !spinner) {
-                // Auto-pause every 100,000,000
-                if ((last_stats.turns % 100_000_000n) == 0) {
-                    pause_click();
-                } else {
-                    // Execute next chunk
-                    worker_execute();
-                }
+            // Autopaused?
+            if (msg.data.paused) {
+                paused = true;
+                turn_target += autopause;
+                update_pause_button();
             }
 
-            // Mark time before requesting animation
-            const rq_mark = `requestAnimation${cur_chunk}`;
-            performance.mark(rq_mark);
+            // Extract number of turns from stats
+            let turns = msg.data.stats.turns;
+
+            // Save time before requesting animation
+            const start_time = perf_now();
 
             // Request animation frame to update the page
-            requestAnimationFrame((ts) => { animationFrame(ts, cur_chunk) });
+            requestAnimationFrame((ts) => {
+                // Record time to get animation frame
+                perf_end(`requestAnimation${turns}`, start_time);
+
+                animationFrame(ts, turns)
+            });
 
             break;
 
@@ -171,9 +177,14 @@ function worker_init(first) {
 }
 
 // Get the worker to execute a chunk
-function worker_execute() {
-    chunk += 1;
-    worker.postMessage({ msgtype: "exec", ticks: iterations, chunk: chunk });
+function worker_exec_start() {
+    perf_mark("postMessageExecStart");
+    worker.postMessage({ msgtype: "execstart", target_turns: turn_target, chunk_size: turn_chunk });
+}
+
+function worker_exec_stop() {
+    perf_mark("postMessageExecStop");
+    worker.postMessage({ msgtype: "execstop" });
 }
 
 // Set up board spaces with data returned from worker initialisation
@@ -187,11 +198,47 @@ function setup_board(data) {
     // Save arrival reason descriptions
     arrival_reason_descs = data.arrival_reasons;
 
-    // Create space content
-    for (let i = 0; i < space_codes.length; i++) {
-        // Find space table cell and add space to it
-        document.getElementById(`${i}`).appendChild(create_space(i));
+    // Create the board
+    let table = document.getElementById("board_tab");
+
+    let tbody = document.createElement("tbody");
+
+    let i, tr;
+
+    // Top row
+    tr = document.createElement("tr");
+
+    for (i = 0; i <= 10; i++) {
+        tr.appendChild(create_space_td(i));
     }
+
+    tbody.appendChild(tr);
+
+    // Sides
+    for (i = 0; i <= 8; i++) {
+        tr = document.createElement("tr");
+
+        tr.appendChild(create_space_td(39 - i));
+
+        if (i == 0) {
+            tr.appendChild(create_title_td())
+        }
+
+        tr.appendChild(create_space_td(11 + i));
+
+        tbody.appendChild(tr);
+    }
+
+    table.appendChild(tbody);
+
+    // Bottom row
+    tr = document.createElement("tr");
+
+    for (i = 0; i <= 10; i++) {
+        tr.appendChild(create_space_td(30 - i));
+    }
+
+    tbody.appendChild(tr);
 
     // Set up pause/play button
     update_pause_button();
@@ -220,6 +267,41 @@ function setup_board(data) {
     // Display the board
     const main = document.getElementById("main");
     main.style.display = "flex";
+}
+
+// Creates the title cell
+function create_title_td() {
+    const td = document.createElement("td");
+
+    td.colSpan = 9;
+    td.rowSpan = 9;
+
+    const div1 = document.createElement("div");
+    div1.setAttribute("class", "title_div");
+
+    const div2 = document.createElement("div");
+    div1.setAttribute("class", "title_border");
+
+    const h1 = document.createElement("h1");
+    h1.setAttribute("class", "title");
+    h1.innerText = "MONOPOLY";
+
+    div2.appendChild(h1);
+
+    div1.appendChild(div2);
+
+    td.appendChild(div1);
+
+    return td;
+}
+
+// Create board space table cell
+function create_space_td(index) {
+    const td = document.createElement("td");
+    td.setAttribute("class", "space_cell greenbg");
+    td.appendChild(create_space(index));
+
+    return td;
 }
 
 // Create board space content for a given board space index
@@ -491,46 +573,20 @@ function space_code_to_description(code, show_elem) {
 }
 
 // requestAnimationFrame callback
-function animationFrame(ts, rq_chunk) {
-    // Get chunk number from current stats
-    const cur_chunk = last_stats.chunk;
-
+function animationFrame(ts, turns) {
     // Is this the animation callback for the current stats?
-    if (cur_chunk != rq_chunk) {
+    if (turns != last_stats.turns) {
         return
     }
 
-    // Build animation request performance marker name
-    const rq_mark = `requestAnimation${cur_chunk}`;
-
-    // Mark time at start of animation
-    const start_mark = `pageUpdateStart${cur_chunk}`;
-    performance.mark(start_mark);
-
-    // Add performance measure for time between requesting animation and getting it
-    performance.measure(
-        `getAnimationFrame${cur_chunk}`,
-        {
-            start: rq_mark,
-            end: start_mark,
-        }
-    );
+    // Save time before updating the page
+    const start_time = perf_now();
 
     // Process the statistics
     process_stats(last_stats);
 
-    // Mark time at end of animation
-    const end_mark = `pageUpdateEnd${cur_chunk}`;
-    performance.mark(end_mark);
-
-    // Add performance measure for time to update the page
-    performance.measure(
-        `pageUpdate${cur_chunk}`,
-        {
-            start: start_mark,
-            end: end_mark,
-        }
-    );
+    // Measure page update time
+    perf_end(`pageUpdate${turns}`, start_time);
 }
 
 // Processes statistics returned by game tick
@@ -1009,8 +1065,10 @@ function pause_click() {
 
     update_pause_button();
 
-    if (!paused) {
-        worker_execute();
+    if (paused) {
+        worker_exec_stop();
+    } else {
+        worker_exec_start();
     }
 }
 

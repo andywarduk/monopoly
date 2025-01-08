@@ -69,6 +69,11 @@ impl WasmBoard {
             .collect()
     }
 
+    /// Get number of turns performed
+    pub fn get_turns(&self) -> u64 {
+        self.board.turns()
+    }
+
     /// Get arrival reason descriptions
     pub fn get_arrival_reason_descs(&self) -> Vec<String> {
         MoveReason::iter()
