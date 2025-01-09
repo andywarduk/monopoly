@@ -1,62 +1,73 @@
-use monopoly_lib::calc::transmatrix::TransMatrix;
-use nalgebra::{DMatrix, Dyn, Matrix};
+use std::cmp::max;
 
-pub fn print_summary<T, F, D>(items: Vec<T>, mat: DMatrix<f64>, desc: &str, trans: F)
+use monopoly_lib::calc::transmatrix::TransMatrix;
+use nalgebra::DMatrix;
+
+use crate::matrix::{RenderMatrixCb, render_matrix};
+
+pub fn print_summary<T>(items: Vec<T>, mat: DMatrix<f64>, desc: &str)
 where
-    F: Fn(&T) -> D,
-    D: std::fmt::Display,
+    T: std::fmt::Display,
 {
     println!("-------- {desc} --------");
 
-    for (item, prob) in items.iter().zip(mat.iter()) {
-        println!("{:>15}: {:<10.8} ({:>7.4}%)", trans(item), prob, prob * 100.0);
-    }
+    print_matrix(&mat, None::<Vec<bool>>, Some(items.iter()), "", true);
 }
 
 pub fn print_steady(mat: &TransMatrix, desc: &str) {
     println!("-------- {desc} --------");
 
-    let steady = mat.steady();
-    let conv = steady
-        .clone()
-        .reshape_generic(Dyn(steady.column_iter().count()), Dyn(steady.row_iter().count()));
-
-    print_matrix(&conv, None::<Vec<bool>>, Some(mat.states().keys()), |p| p.to_string());
+    print_matrix(mat.steady(), None::<Vec<bool>>, Some(mat.states().keys()), "", true);
 }
 
-pub fn print_matrix<T, R, C, S, RH, CH, F>(matrix: &Matrix<T, R, C, S>, colheaders: Option<CH>, rowheaders: Option<RH>, format: F)
+// Generic matrix print functions
+
+pub fn print_matrix<T, RH, CH>(matrix: &DMatrix<T>, colheaders: Option<CH>, rowheaders: Option<RH>, rowcolhd: &str, transpose: bool)
 where
-    T: nalgebra::Scalar,
-    R: nalgebra::Dim,
-    C: nalgebra::Dim,
-    S: nalgebra::storage::Storage<T, R, C>,
+    T: nalgebra::Scalar + std::fmt::Display,
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
     CH: IntoIterator + Clone,
     CH::Item: std::fmt::Display,
-    F: Fn(&T) -> String,
 {
-    // Write header row
-    if let Some(colheaders) = colheaders {
-        for (i, header) in colheaders.clone().into_iter().enumerate() {
-            if i > 0 || rowheaders.is_some() {
-                print!(",");
+    // Get column lengths
+    let lencount = if transpose { matrix.nrows() } else { matrix.ncols() };
+    let mut max_lens = vec![0; lencount + 1];
+
+    render_matrix(matrix, colheaders.clone(), rowheaders.clone(), rowcolhd, transpose, |(i, _j), value| {
+        match value {
+            RenderMatrixCb::RowColHd(d) => {
+                max_lens[i] = max(max_lens[i], d.len());
             }
-
-            print!("{}", header);
+            RenderMatrixCb::ColHd(d) | RenderMatrixCb::RowHd(d) => {
+                max_lens[i] = max(max_lens[i], format!("{d}").len());
+            }
+            RenderMatrixCb::Cell(d) => {
+                max_lens[i] = max(max_lens[i], format!("{d}").len());
+            }
+            RenderMatrixCb::Eol => (),
         }
+        Ok(())
+    })
+    .unwrap();
 
-        println!();
+    // Print
+    render_matrix(matrix, colheaders, rowheaders, rowcolhd, transpose, |(i, _j), value| {
+        match value {
+            RenderMatrixCb::RowColHd(d) => print_matrix_write(i, max_lens[i], d),
+            RenderMatrixCb::ColHd(d) | RenderMatrixCb::RowHd(d) => print_matrix_write(i, max_lens[i], d),
+            RenderMatrixCb::Cell(d) => print_matrix_write(i, max_lens[i], d),
+            RenderMatrixCb::Eol => println!(),
+        }
+        Ok(())
+    })
+    .unwrap();
+}
+
+fn print_matrix_write(i: usize, length: usize, display: impl std::fmt::Display) {
+    if i > 0 {
+        print!(" ");
     }
 
-    // Write state transition probability rows
-    let mut rowheaders = rowheaders.map(|rowheaders| rowheaders.into_iter());
-
-    for row in matrix.row_iter() {
-        if let Some(headers) = &mut rowheaders {
-            print!("{},", headers.next().unwrap());
-        }
-
-        println!("{}", row.iter().map(&format).collect::<Vec<String>>().join(","));
-    }
+    print!("{display:<length$}");
 }
