@@ -85,7 +85,9 @@ impl Space {
 
 use Space::*;
 
-pub const SPACES: [Space; 40] = [
+pub const SPACECOUNT: usize = 40;
+
+pub const SPACES: [Space; SPACECOUNT] = [
     Go,
     Property(0, 0),
     CommunityChest(0),

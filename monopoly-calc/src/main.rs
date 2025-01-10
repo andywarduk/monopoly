@@ -26,16 +26,18 @@ fn main() -> Result<(), Box<dyn Error>> {
     let wait_map = TransMatrix::new(Strategy::JailWait, cli.dp, cli.debug);
 
     // Summarise steady state for pay strategy by board position
-    let (pay_space_headings, pay_space_mat) = pay_map.steady_summary(|state| Some(SPACES[state.position].shortdesc()));
+    let (pay_space_headings, pay_space_mat) =
+        pay_map.steady_group_sum(|state| Some(SPACES[state.position].shortdesc()));
 
     // Summarise steady state for pay strategy by board set
-    let (pay_set_headings, pay_set_mat) = pay_map.steady_summary(|state| Some(SPACES[state.position].set()));
+    let (pay_set_headings, pay_set_mat) = pay_map.steady_group_sum(|state| Some(SPACES[state.position].set()));
 
     // Summarise steady state for wait strategy by board position
-    let (wait_space_headings, wait_space_mat) = wait_map.steady_summary(|state| Some(SPACES[state.position].shortdesc()));
+    let (wait_space_headings, wait_space_mat) =
+        wait_map.steady_group_sum(|state| Some(SPACES[state.position].shortdesc()));
 
     // Summarise steady state for wait strategy by board set
-    let (wait_set_headings, wait_set_mat) = wait_map.steady_summary(|state| Some(SPACES[state.position].set()));
+    let (wait_set_headings, wait_set_mat) = wait_map.steady_group_sum(|state| Some(SPACES[state.position].set()));
 
     // -- Spreadsheet Output --
 
@@ -43,16 +45,36 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut workbook = Workbook::new();
 
     // Write summary by space for pay strategy
-    write_summary_sheet(&mut workbook, &pay_space_headings, &pay_space_mat, "Probablility by position (pay)")?;
+    write_summary_sheet(
+        &mut workbook,
+        &pay_space_headings,
+        &pay_space_mat,
+        "Probablility by position (pay)",
+    )?;
 
     // Write summary by set for pay strategy
-    write_summary_sheet(&mut workbook, &pay_set_headings, &pay_set_mat, "Probablility by set (pay)")?;
+    write_summary_sheet(
+        &mut workbook,
+        &pay_set_headings,
+        &pay_set_mat,
+        "Probablility by set (pay)",
+    )?;
 
     // Write summary by space for wait strategy
-    write_summary_sheet(&mut workbook, &wait_space_headings, &wait_space_mat, "Probablility by position (wait)")?;
+    write_summary_sheet(
+        &mut workbook,
+        &wait_space_headings,
+        &wait_space_mat,
+        "Probablility by position (wait)",
+    )?;
 
     // Write summary by set for wait strategy
-    write_summary_sheet(&mut workbook, &wait_set_headings, &wait_set_mat, "Probablility by set (wait)")?;
+    write_summary_sheet(
+        &mut workbook,
+        &wait_set_headings,
+        &wait_set_mat,
+        "Probablility by set (wait)",
+    )?;
 
     // Write worksheets for steady states for both strategies
     write_steady_sheet(&mut workbook, "Pay Steady", &pay_map)?;
@@ -89,7 +111,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     // Write summary by set for pay strategy
-    write_summary_csv(Path::new("csv/pay_set.csv"), &pay_set_mat, "Probability", &pay_set_headings, "Set")?;
+    write_summary_csv(
+        Path::new("csv/pay_set.csv"),
+        &pay_set_mat,
+        "Probability",
+        &pay_set_headings,
+        "Set",
+    )?;
 
     // Write summary by space for wait strategy
     write_summary_csv(
@@ -101,7 +129,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     )?;
 
     // Write summary by set for wait strategy
-    write_summary_csv(Path::new("csv/wait_set.csv"), &wait_set_mat, "Probability", &wait_set_headings, "Set")?;
+    write_summary_csv(
+        Path::new("csv/wait_set.csv"),
+        &wait_set_mat,
+        "Probability",
+        &wait_set_headings,
+        "Set",
+    )?;
 
     // Write csv for pay strategy steady state
     write_steady_csv(Path::new("csv/pay_steady.csv"), &pay_map)?;

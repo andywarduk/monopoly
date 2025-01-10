@@ -2,13 +2,11 @@ use std::collections::VecDeque;
 
 use crate::chance::CHCard;
 use crate::commchest::CCCard;
+use crate::movereason::MoveReason;
 use crate::space::{SPACES, Space};
 use crate::strategy::Strategy;
-use movereason::MoveReason;
 use rand::prelude::*;
 use strum::EnumCount;
-
-pub mod movereason;
 
 type CardChoose<T> = fn(rng: &mut ThreadRng, &mut VecDeque<T>) -> T;
 type DiceRollCb = fn(board: &mut Board, doubles: usize) -> (u8, u8);

@@ -192,12 +192,7 @@ function exec_chunk() {
 
 function build_jstats(rstats) {
     // Chop reasons array
-    const rreasons = rstats.reasons;
-    const reasons = [];
-
-    for (let i = 0; i < rreasons.length; i += rstats.reasons_stride) {
-        reasons.push(rreasons.subarray(i, i + rstats.reasons_stride));
-    }
+    const reasons = chop_flat_array(rstats.reasons, rstats.reasons_stride);
 
     return {
         turns: rstats.turns,
@@ -218,9 +213,23 @@ function calc_expected(msg) {
     // Mark end of run and measure
     const elapsed = perf_end("calcExpected", start_time);
 
+    // Chop move reasons probability array
+    const movereason_prob = chop_flat_array(freqs.movereason_prob, freqs.movereason_prob_stride);
+
     postMessage({
         msgtype: "calcexpectedfin",
-        freq: freqs,
+        freq: freqs.space_prob,
+        movereason_prob: movereason_prob,
         duration: elapsed.duration,
     });
+}
+
+function chop_flat_array(array, stride) {
+    const result = [];
+
+    for (let i = 0; i < array.length; i += stride) {
+        result.push(array.subarray(i, i + stride));
+    }
+
+    return result;
 }

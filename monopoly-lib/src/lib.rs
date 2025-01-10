@@ -1,5 +1,6 @@
 pub mod chance;
 pub mod commchest;
+pub mod movereason;
 pub mod space;
 pub mod strategy;
 

@@ -35,6 +35,9 @@ let last_stats;
 // Expected probabilities for arriving at each space
 let expected_freq;
 
+// Expected probabilities for arriving at each space by move reason
+let expected_movereason_freq;
+
 // Number formatters
 const number_formatter = Intl.NumberFormat();
 let percent_formatters = {};
@@ -107,6 +110,7 @@ function process_worker_message(msg) {
 
             // Save expected frequencies
             expected_freq = msg.data.freq;
+            expected_movereason_freq = msg.data.movereason_prob;
 
             // Hide spinner
             spinner_show(false);
@@ -153,7 +157,7 @@ function process_worker_message(msg) {
                 // Record time to get animation frame
                 perf_end(`requestAnimation${turns}`, start_time);
 
-                animationFrame(ts, turns)
+                animation_frame(ts, turns)
             });
 
             break;
@@ -624,7 +628,7 @@ function space_code_to_description(code, show_elem) {
 }
 
 // requestAnimationFrame callback
-function animationFrame(ts, turns) {
+function animation_frame(ts, turns) {
     // Is this the animation callback for the current stats?
     if (turns != last_stats.turns) {
         return
@@ -743,36 +747,32 @@ function update_percentages_and_leaderboard(stats) {
         const [elem, stat, sub] = leaderboard[i];
         let code = space_codes[elem];
 
-        // Get expected frequency
-        let expected;
+        // Get expected elements
+        let expected_elems = [];
 
         switch (code) {
             case 'g': // Go to jail
-                expected = 0;
-
                 break;
-
             case 'J': // Jail
                 switch (sub) {
                     case 0: // Combined jail/just visiting
-                        expected = expected_freq[space_visit] + expected_freq[space_g2j];
+                        expected_elems = [space_visit, space_g2j];
                         break;
                     case 1: // In jail
-                        expected = expected_freq[space_g2j];
+                        expected_elems = [space_g2j];
                         break;
                     case 2: // Just visiting
-                        expected = expected_freq[space_visit];
+                        expected_elems = [space_visit];
                         break;
                 }
-
                 break;
-
             default:
-                expected = expected_freq[elem];
-
+                expected_elems = [elem];
                 break;
-
         }
+
+        // Get expected frequency
+        const expected = expected_elems.reduce((acc, elem) => acc + expected_freq[elem], 0);
 
         // Add leaderboard main entry
         add_leaderboard_row(tbody, 'S', [elem, sub], stat, stats.moves, expected)
@@ -812,7 +812,24 @@ function update_percentages_and_leaderboard(stats) {
 
         // Add to the leaderboard
         for (const [type, idxelems, count] of sort_reasons) {
-            add_leaderboard_row(tbody, type, idxelems, count, stat);
+            let rexpected = 0;
+
+            switch (type) {
+                case 'R':
+                    rexpected = expected_elems.reduce((acc, elem) => acc + expected_movereason_freq[idxelems[0]][elem], 0);
+                    break;
+                case 'J':
+                    rexpected = expected_freq[space_visit];
+                    break;
+            }
+
+            if (rexpected == 0) {
+                rexpected = undefined;
+            } else {
+                rexpected /= expected
+            }
+
+            add_leaderboard_row(tbody, type, idxelems, count, stat, rexpected);
         }
     }
 }
@@ -908,7 +925,7 @@ function add_leaderboard_row(tbody, type, idxelems, value, total, expected) {
         row.error.innerText = percent_fmt(error, 4);
         colour_error(row.error, error, 6);
     } else {
-        row.pct.innerText = "";
+        row.expected.innerText = "";
         row.error.innerText = "";
     }
 

@@ -19,7 +19,7 @@ impl std::fmt::Display for MoveReason {
             MoveReason::Roll => "Rolled",
             MoveReason::CHCard => "Chance",
             MoveReason::CCCard => "Community Chest",
-            MoveReason::CHCardCCCard => "Chance -> Community Chest",
+            MoveReason::CHCardCCCard => "Chance ➔ Community Chest",
             MoveReason::GoToJail => "Go to Jail",
             MoveReason::TripleDouble => "Triple Double",
             MoveReason::NoDouble => "Double Not Rolled",

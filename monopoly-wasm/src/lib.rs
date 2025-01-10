@@ -1,7 +1,8 @@
 use monopoly_lib::{
     calc::transmatrix::TransMatrix,
-    sim::{Board, movereason::MoveReason},
-    space::{SPACES, Space},
+    movereason::MoveReason,
+    sim::Board,
+    space::{SPACECOUNT, SPACES, Space},
     strategy::Strategy,
 };
 use strum::IntoEnumIterator;
@@ -103,7 +104,16 @@ pub fn create_board(jailwait: bool) -> WasmBoard {
 }
 
 #[wasm_bindgen]
-pub fn get_expected_frequencies(jailwait: bool) -> Vec<f64> {
+pub struct WasmFreq {
+    #[wasm_bindgen(getter_with_clone)]
+    pub space_prob: Vec<f64>,
+    #[wasm_bindgen(getter_with_clone)]
+    pub movereason_prob: Vec<f64>,
+    pub movereason_prob_stride: usize,
+}
+
+#[wasm_bindgen]
+pub fn get_expected_frequencies(jailwait: bool) -> WasmFreq {
     // Build probability matrices
     let transmatrix = TransMatrix::new(
         if jailwait {
@@ -115,9 +125,23 @@ pub fn get_expected_frequencies(jailwait: bool) -> Vec<f64> {
         false,
     );
 
-    // Get the steady state matrix
-    let (_, mat) = transmatrix.steady_summary(|state| Some(state.position));
+    // Sum the steady state matrix by position
+    let (_, mat) = transmatrix.steady_group_sum(|state| Some(state.position));
 
     // Convert to vector
-    mat.into_iter().copied().collect()
+    let space_prob = mat.into_iter().copied().collect();
+
+    // Calculate move reason frequencies
+    let movereason_prob = transmatrix
+        .calc_movereason_probabilty()
+        .iter()
+        .flatten()
+        .copied()
+        .collect::<Vec<_>>();
+
+    WasmFreq {
+        space_prob,
+        movereason_prob,
+        movereason_prob_stride: SPACECOUNT,
+    }
 }

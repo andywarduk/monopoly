@@ -15,7 +15,7 @@ use crossterm::{
     tty::IsTty,
 };
 
-use monopoly_lib::{sim::Board, sim::movereason::MoveReason, space::SPACES};
+use monopoly_lib::{movereason::MoveReason, sim::Board, space::SPACES};
 use monopoly_lib::{space::Space, strategy::Strategy};
 use num_traits::{FromPrimitive, Num, NumCast};
 use numformat::NumFormat;

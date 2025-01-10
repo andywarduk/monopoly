@@ -7,7 +7,7 @@ pub enum CCCard {
     Inconsequential,
 }
 
-const CCCARDS: usize = 16;
+pub const CCCARDS: usize = 16;
 
 impl CCCard {
     pub fn build_deck() -> VecDeque<CCCard> {

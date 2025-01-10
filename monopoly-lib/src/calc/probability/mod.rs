@@ -4,7 +4,7 @@ use std::{
     ops::{Add, AddAssign, Div, Mul, MulAssign, Sub, SubAssign},
 };
 
-use num_traits::{Num, NumCast, One, Zero};
+use num_traits::{NumCast, One, PrimInt, Zero};
 
 macro_rules! p {
     ($numerator:literal/$denominator:literal) => {
@@ -162,7 +162,7 @@ impl MulAssign for Probability {
     }
 }
 
-impl<I: Num + NumCast> Mul<I> for Probability {
+impl<I: PrimInt + NumCast> Mul<I> for Probability {
     type Output = Self;
 
     fn mul(self, other: I) -> Self {
@@ -186,7 +186,7 @@ impl Div for Probability {
     }
 }
 
-impl<I: Num + NumCast> Div<I> for Probability {
+impl<I: PrimInt + NumCast> Div<I> for Probability {
     type Output = Self;
 
     fn div(self, other: I) -> Self {

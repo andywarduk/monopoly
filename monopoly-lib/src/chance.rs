@@ -12,7 +12,7 @@ pub enum CHCard {
     Inconsequential,
 }
 
-const CHCARDS: usize = 16;
+pub const CHCARDS: usize = 16;
 
 impl CHCard {
     pub fn build_deck() -> VecDeque<CHCard> {
