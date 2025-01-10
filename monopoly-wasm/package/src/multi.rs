@@ -1,6 +1,4 @@
-use std::{
-    collections::HashMap, error::Error, fs::File, io::Write, os::unix::ffi::OsStrExt, path::PathBuf,
-};
+use std::{collections::HashMap, error::Error, fs::File, io::Write, os::unix::ffi::OsStrExt, path::PathBuf};
 
 use memmap2::Mmap;
 
@@ -14,19 +12,11 @@ struct MultiState<'a> {
     depth: usize,
 }
 
-pub fn multi_process(
-    config: &Config<()>,
-    infile: PathBuf,
-    mmap: &Mmap,
-    depth: usize,
-) -> Result<(), Box<dyn Error>> {
+pub fn multi_process(config: &Config<()>, infile: PathBuf, mmap: &Mmap, depth: usize) -> Result<(), Box<dyn Error>> {
     // Build output file path
     let outfile = config.outroot.join(infile.file_name().unwrap());
 
-    message(
-        &format!("{} -> {}", infile.display(), outfile.display()),
-        depth,
-    );
+    message(&format!("{} -> {}", infile.display(), outfile.display()), depth);
 
     // Create state for processing
     let mut state = MultiState {
@@ -53,11 +43,7 @@ fn multi_text(text: &str, state: &mut MultiState) -> Result<(), Box<dyn Error>> 
     Ok(())
 }
 
-fn multi_link(
-    link: &str,
-    parms: &HashMap<String, String>,
-    state: &mut MultiState,
-) -> Result<(), Box<dyn Error>> {
+fn multi_link(link: &str, parms: &HashMap<String, String>, state: &mut MultiState) -> Result<(), Box<dyn Error>> {
     message(&format!("Processing link: {}", link), state.depth);
 
     // Build link file path
@@ -69,9 +55,7 @@ fn multi_link(
     }
 
     // Write link name
-    state
-        .file
-        .write_all(linkfile.file_name().unwrap().as_bytes())?;
+    state.file.write_all(linkfile.file_name().unwrap().as_bytes())?;
 
     // Process the linked file
     process_input_file(state.config, linkfile, state.depth + 1)?;

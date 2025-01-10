@@ -41,16 +41,31 @@ pub fn write_jump_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix, floa
 }
 
 pub fn write_steady_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix) -> Result<(), Box<dyn Error>> {
-    write_matrix_sheet(book, name, mat.steady(), None::<Vec<bool>>, Some(mat.states().keys()), true, |p| *p)
+    write_matrix_sheet(
+        book,
+        name,
+        mat.steady(),
+        None::<Vec<bool>>,
+        Some(mat.states().keys()),
+        true,
+        |p| *p,
+    )
 }
 
-pub fn write_summary_sheet<T, H>(book: &mut Workbook, rowheaders: H, matrix: &DMatrix<T>, name: &str) -> Result<(), Box<dyn Error>>
+pub fn write_summary_sheet<T, H>(
+    book: &mut Workbook,
+    rowheaders: H,
+    matrix: &DMatrix<T>,
+    name: &str,
+) -> Result<(), Box<dyn Error>>
 where
     T: nalgebra::Scalar + NumCast,
     H: IntoIterator + Clone,
     H::Item: std::fmt::Display,
 {
-    write_matrix_sheet(book, name, matrix, Some(["Probability"]), Some(rowheaders), true, |p| p.to_f64())?;
+    write_matrix_sheet(book, name, matrix, Some(["Probability"]), Some(rowheaders), true, |p| {
+        p.to_f64()
+    })?;
 
     Ok(())
 }
@@ -107,21 +122,28 @@ where
     sheet.set_freeze_panes(colheadercnt as u32, rowheadercnt as u16)?;
 
     // Draw the matrix
-    render_matrix(matrix, colheaders, rowheaders, "", transpose, |(i, j), value| match value {
-        RenderMatrixCb::RowColHd(string) => {
-            sheet.write(j as u32, i as u16, string)?;
-            Ok(())
-        }
-        RenderMatrixCb::ColHd(display) | RenderMatrixCb::RowHd(display) => {
-            sheet.write(j as u32, i as u16, format!("{}", display))?;
-            Ok(())
-        }
-        RenderMatrixCb::Cell(prob) => {
-            sheet.write(j as u32, i as u16, format(prob))?;
-            Ok(())
-        }
-        RenderMatrixCb::Eol => Ok(()),
-    })?;
+    render_matrix(
+        matrix,
+        colheaders,
+        rowheaders,
+        "",
+        transpose,
+        |(i, j), value| match value {
+            RenderMatrixCb::RowColHd(string) => {
+                sheet.write(j as u32, i as u16, string)?;
+                Ok(())
+            }
+            RenderMatrixCb::ColHd(display) | RenderMatrixCb::RowHd(display) => {
+                sheet.write(j as u32, i as u16, format!("{}", display))?;
+                Ok(())
+            }
+            RenderMatrixCb::Cell(prob) => {
+                sheet.write(j as u32, i as u16, format(prob))?;
+                Ok(())
+            }
+            RenderMatrixCb::Eol => Ok(()),
+        },
+    )?;
 
     Ok(())
 }

@@ -20,19 +20,11 @@ struct SingleState<'a> {
 }
 
 /// Top level file callback
-pub fn single_process(
-    config: &Config<()>,
-    infile: PathBuf,
-    mmap: &Mmap,
-    depth: usize,
-) -> Result<(), Box<dyn Error>> {
+pub fn single_process(config: &Config<()>, infile: PathBuf, mmap: &Mmap, depth: usize) -> Result<(), Box<dyn Error>> {
     // Build output file path
     let outfile = config.outroot.join(infile.file_name().unwrap());
 
-    message(
-        &format!("{} -> {}", infile.display(), outfile.display()),
-        depth,
-    );
+    message(&format!("{} -> {}", infile.display(), outfile.display()), depth);
 
     // Create state for processing
     let mut state = SingleState {
@@ -59,11 +51,7 @@ fn single_text(text: &str, state: &mut SingleState) -> Result<(), Box<dyn Error>
     Ok(())
 }
 
-fn single_link(
-    link: &str,
-    _parms: &HashMap<String, String>,
-    state: &mut SingleState,
-) -> Result<(), Box<dyn Error>> {
+fn single_link(link: &str, _parms: &HashMap<String, String>, state: &mut SingleState) -> Result<(), Box<dyn Error>> {
     message(&format!("  Processing link: {}", link), state.depth);
 
     // Build path to linked file
@@ -78,11 +66,7 @@ fn single_link(
     Ok(())
 }
 
-fn convert_to_data_url(
-    config: &Config<()>,
-    file: &Path,
-    depth: usize,
-) -> Result<String, Box<dyn Error>> {
+fn convert_to_data_url(config: &Config<()>, file: &Path, depth: usize) -> Result<String, Box<dyn Error>> {
     // Create configuration for data URL processing
     let data_url_config: Config<String> = Config {
         outroot: config.outroot.clone(),
@@ -118,12 +102,7 @@ fn convert_to_data_url_handler(
     };
 
     // Try and parse the file
-    let content = if parse_file(
-        mmap,
-        &mut state,
-        convert_to_data_url_text,
-        convert_to_data_url_link,
-    )? {
+    let content = if parse_file(mmap, &mut state, convert_to_data_url_text, convert_to_data_url_link)? {
         // Ok - return the converted content
         state.content.as_bytes().to_vec()
     } else {
@@ -146,10 +125,7 @@ fn convert_to_data_url_handler(
     };
 
     // Build the data URL
-    let dataurl = format!(
-        "data:{mime_type};base64,{}",
-        general_purpose::STANDARD.encode(content)
-    );
+    let dataurl = format!("data:{mime_type};base64,{}", general_purpose::STANDARD.encode(content));
 
     Ok(dataurl)
 }

@@ -63,7 +63,14 @@ fn test_jail_rolls_fail() {
     assert_eq!(board.turns, 5);
     assert_eq!(board.moves, 5);
     assert_eq!(board.arrivals.iter().sum::<u64>(), board.moves);
-    assert_eq!(board.arrival_reason.iter().map(|reasons| reasons.iter().sum::<u64>()).sum::<u64>(), 4);
+    assert_eq!(
+        board
+            .arrival_reason
+            .iter()
+            .map(|reasons| reasons.iter().sum::<u64>())
+            .sum::<u64>(),
+        4
+    );
 }
 
 #[test]
@@ -101,7 +108,14 @@ fn test_jail_rolls_succ1() {
     assert_eq!(board.turns, 2);
     assert_eq!(board.moves, 2);
     assert_eq!(board.arrivals.iter().sum::<u64>(), board.moves);
-    assert_eq!(board.arrival_reason.iter().map(|reasons| reasons.iter().sum::<u64>()).sum::<u64>(), 1);
+    assert_eq!(
+        board
+            .arrival_reason
+            .iter()
+            .map(|reasons| reasons.iter().sum::<u64>())
+            .sum::<u64>(),
+        1
+    );
 }
 
 #[test]
@@ -149,7 +163,14 @@ fn test_jail_rolls_succ2() {
     assert_eq!(board.turns, 3);
     assert_eq!(board.moves, 3);
     assert_eq!(board.arrivals.iter().sum::<u64>(), board.moves);
-    assert_eq!(board.arrival_reason.iter().map(|reasons| reasons.iter().sum::<u64>()).sum::<u64>(), 2);
+    assert_eq!(
+        board
+            .arrival_reason
+            .iter()
+            .map(|reasons| reasons.iter().sum::<u64>())
+            .sum::<u64>(),
+        2
+    );
 }
 
 #[test]
@@ -206,7 +227,14 @@ fn test_jail_rolls_succ3() {
     assert_eq!(board.turns, 4);
     assert_eq!(board.moves, 4);
     assert_eq!(board.arrivals.iter().sum::<u64>(), board.moves);
-    assert_eq!(board.arrival_reason.iter().map(|reasons| reasons.iter().sum::<u64>()).sum::<u64>(), 3);
+    assert_eq!(
+        board
+            .arrival_reason
+            .iter()
+            .map(|reasons| reasons.iter().sum::<u64>())
+            .sum::<u64>(),
+        3
+    );
 }
 
 #[test]
@@ -233,7 +261,14 @@ fn test_chance_to_cc() {
     assert_eq!(board.turns, 1);
     assert_eq!(board.moves, 1);
     assert_eq!(board.arrivals.iter().sum::<u64>(), board.moves);
-    assert_eq!(board.arrival_reason.iter().map(|reasons| reasons.iter().sum::<u64>()).sum::<u64>(), 1);
+    assert_eq!(
+        board
+            .arrival_reason
+            .iter()
+            .map(|reasons| reasons.iter().sum::<u64>())
+            .sum::<u64>(),
+        1
+    );
 }
 
 #[test]
@@ -260,5 +295,12 @@ fn test_chance_to_cc_to_go() {
     assert_eq!(board.turns, 1);
     assert_eq!(board.moves, 1);
     assert_eq!(board.arrivals.iter().sum::<u64>(), board.moves);
-    assert_eq!(board.arrival_reason.iter().map(|reasons| reasons.iter().sum::<u64>()).sum::<u64>(), 1);
+    assert_eq!(
+        board
+            .arrival_reason
+            .iter()
+            .map(|reasons| reasons.iter().sum::<u64>())
+            .sum::<u64>(),
+        1
+    );
 }

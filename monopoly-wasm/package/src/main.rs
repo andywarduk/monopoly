@@ -31,11 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Cli::parse();
 
     // Set callback based on single or multiple assets
-    let cb = if args.single {
-        single_process
-    } else {
-        multi_process
-    };
+    let cb = if args.single { single_process } else { multi_process };
 
     // Create configuration
     let config = Config {
@@ -57,11 +53,7 @@ struct Config<R> {
     callback: ProcessCallback<R>,
 }
 
-fn process_input_file<R>(
-    config: &Config<R>,
-    infile: PathBuf,
-    depth: usize,
-) -> Result<R, Box<dyn Error>> {
+fn process_input_file<R>(config: &Config<R>, infile: PathBuf, depth: usize) -> Result<R, Box<dyn Error>> {
     message(&format!("Processing file {}", infile.display()), depth);
 
     // Memory map the input file
@@ -90,8 +82,7 @@ fn openout(outfile: &PathBuf) -> Result<File, Box<dyn Error>> {
 }
 
 type ParseTextCallback<S> = fn(text: &str, state: &mut S) -> Result<(), Box<dyn Error>>;
-type ParseLinkCallback<S> =
-    fn(text: &str, &HashMap<String, String>, state: &mut S) -> Result<(), Box<dyn Error>>;
+type ParseLinkCallback<S> = fn(text: &str, &HashMap<String, String>, state: &mut S) -> Result<(), Box<dyn Error>>;
 
 fn parse_file<S>(
     mmap: &Mmap,
@@ -129,10 +120,7 @@ fn parse_file<S>(
                         .iter()
                         .map(|parm| {
                             let mut split = parm.split('=');
-                            (
-                                split.next().unwrap().to_string(),
-                                split.next().unwrap().to_string(),
-                            )
+                            (split.next().unwrap().to_string(), split.next().unwrap().to_string())
                         })
                         .collect::<HashMap<_, _>>();
 

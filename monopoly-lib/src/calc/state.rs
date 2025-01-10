@@ -15,7 +15,11 @@ pub struct State {
 
 impl State {
     pub fn new(doubles: u8, position: usize, jailroll: u8) -> Self {
-        Self { position, doubles, jailroll }
+        Self {
+            position,
+            doubles,
+            jailroll,
+        }
     }
 
     pub fn create_states(strategy: &Strategy) -> BTreeMap<State, usize> {

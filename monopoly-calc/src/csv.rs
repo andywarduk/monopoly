@@ -41,27 +41,49 @@ pub fn write_move_csv(file: &Path, mat: &TransMatrix, float: bool) -> Result<(),
 pub fn write_jump_csv(file: &Path, mat: &TransMatrix, float: bool) -> Result<(), Box<dyn Error>> {
     let iter = SPACES.iter().map(|s| s.shortdesc());
 
-    write_matrix_csv(file, mat.jumpmat(), Some(iter.clone()), Some(iter), "From \\ To", false, |p| {
-        if float { p.as_f64().to_string() } else { p.to_string() }
-    })?;
+    write_matrix_csv(
+        file,
+        mat.jumpmat(),
+        Some(iter.clone()),
+        Some(iter),
+        "From \\ To",
+        false,
+        |p| {
+            if float { p.as_f64().to_string() } else { p.to_string() }
+        },
+    )?;
 
     Ok(())
 }
 
 pub fn write_steady_csv(file: &Path, mat: &TransMatrix) -> Result<(), Box<dyn Error>> {
-    write_matrix_csv(file, mat.steady(), None::<Vec<bool>>, Some(mat.states().keys()), "", true, |p| {
-        p.to_string()
-    })?;
+    write_matrix_csv(
+        file,
+        mat.steady(),
+        None::<Vec<bool>>,
+        Some(mat.states().keys()),
+        "",
+        true,
+        |p| p.to_string(),
+    )?;
 
     Ok(())
 }
 
-pub fn write_summary_csv<RH>(file: &Path, matrix: &DMatrix<f64>, colheader: &str, rowheaders: RH, rowcolhd: &str) -> Result<(), Box<dyn Error>>
+pub fn write_summary_csv<RH>(
+    file: &Path,
+    matrix: &DMatrix<f64>,
+    colheader: &str,
+    rowheaders: RH,
+    rowcolhd: &str,
+) -> Result<(), Box<dyn Error>>
 where
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
 {
-    write_matrix_csv(file, matrix, Some([colheader]), Some(rowheaders), rowcolhd, true, |p| p.to_string())?;
+    write_matrix_csv(file, matrix, Some([colheader]), Some(rowheaders), rowcolhd, true, |p| {
+        p.to_string()
+    })?;
 
     Ok(())
 }

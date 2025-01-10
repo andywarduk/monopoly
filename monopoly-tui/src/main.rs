@@ -41,7 +41,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     terminal::enable_raw_mode()?;
 
     // Play the game
-    game_loop(&mut stdout, if cli.wait { Strategy::JailWait } else { Strategy::PayJail })?;
+    game_loop(
+        &mut stdout,
+        if cli.wait {
+            Strategy::JailWait
+        } else {
+            Strategy::PayJail
+        },
+    )?;
 
     // Reset the terminal
     execute!(stdout, style::ResetColor, cursor::Show, terminal::LeaveAlternateScreen)?;
@@ -292,11 +299,29 @@ where
 
     if split_jail {
         // Split jail & Just visiting
-        draw_space_int(XPAD + (10 * XSPACE), YPAD, "VISIT".to_string(), visit, &SPACES[visit_elem])?;
-        draw_space_int(XPAD + (9 * XSPACE), YPAD + YSPACE, "JAIL".to_string(), jail, &SPACES[visit_elem])?;
+        draw_space_int(
+            XPAD + (10 * XSPACE),
+            YPAD,
+            "VISIT".to_string(),
+            visit,
+            &SPACES[visit_elem],
+        )?;
+        draw_space_int(
+            XPAD + (9 * XSPACE),
+            YPAD + YSPACE,
+            "JAIL".to_string(),
+            jail,
+            &SPACES[visit_elem],
+        )?;
     } else {
         // Combined jail
-        draw_space_int(XPAD + (10 * XSPACE), YPAD, "JAIL".to_string(), visit + jail, &SPACES[visit_elem])?;
+        draw_space_int(
+            XPAD + (10 * XSPACE),
+            YPAD,
+            "JAIL".to_string(),
+            visit + jail,
+            &SPACES[visit_elem],
+        )?;
     }
 
     // Draw go to jail
@@ -332,7 +357,11 @@ where
     };
 
     let blank_line = |w: &mut W, y: &mut u16| -> io::Result<()> {
-        queue!(w, cursor::MoveTo(4 + (11 * XSPACE), *y + YPAD), style::Print(format!("{:52}", "")),)?;
+        queue!(
+            w,
+            cursor::MoveTo(4 + (11 * XSPACE), *y + YPAD),
+            style::Print(format!("{:52}", "")),
+        )?;
 
         *y += 1;
 
@@ -375,7 +404,12 @@ where
             })
             .collect::<Vec<_>>()
     } else {
-        let mut vec = board.arrivals().iter().enumerate().map(|(i, a)| (*a, i, 0)).collect::<Vec<_>>();
+        let mut vec = board
+            .arrivals()
+            .iter()
+            .enumerate()
+            .map(|(i, a)| (*a, i, 0))
+            .collect::<Vec<_>>();
         vec[visit].0 += vec[g2j].0;
         vec.swap_remove(g2j);
         vec
@@ -406,7 +440,14 @@ where
 
         for (reason, count) in board.arrival_reasons_on(arrivals_elem).iter().enumerate() {
             if *count != 0 {
-                draw_stat_pct(w, &mut y, &format!("  {}", MoveReason::from_usize(reason).unwrap()), *count, a, 2)?;
+                draw_stat_pct(
+                    w,
+                    &mut y,
+                    &format!("  {}", MoveReason::from_usize(reason).unwrap()),
+                    *count,
+                    a,
+                    2,
+                )?;
             }
         }
 
@@ -421,7 +462,11 @@ where
 fn percent<I: Num + NumCast>(value: I, total: I) -> f64 {
     let total = total.to_f64().unwrap();
 
-    if total == 0.0 { 0.0 } else { (value.to_f64().unwrap() * 100.0) / total }
+    if total == 0.0 {
+        0.0
+    } else {
+        (value.to_f64().unwrap() * 100.0) / total
+    }
 }
 
 fn space_desc(elem: usize) -> String {

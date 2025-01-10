@@ -45,7 +45,12 @@ impl WasmBoard {
             rollfreq: self.board.rollfreq().to_vec(),
             arrivals: self.board.arrivals().to_vec(),
             reasons_stride: self.board.arrival_reasons()[0].len(),
-            reasons: self.board.arrival_reasons().iter().flat_map(|arr| arr.iter().copied()).collect(),
+            reasons: self
+                .board
+                .arrival_reasons()
+                .iter()
+                .flat_map(|arr| arr.iter().copied())
+                .collect(),
             jailwait: self.board.strategy() == Strategy::JailWait,
         }
     }
@@ -77,7 +82,7 @@ impl WasmBoard {
     /// Get arrival reason descriptions
     pub fn get_arrival_reason_descs(&self) -> Vec<String> {
         MoveReason::iter()
-            .filter_map(|r| if r.clone() as isize >= 0 { Some(r.to_string()) } else { None })
+            .filter_map(|r| if r as isize >= 0 { Some(r.to_string()) } else { None })
             .collect()
     }
 }
@@ -86,14 +91,29 @@ impl WasmBoard {
 pub fn create_board(jailwait: bool) -> WasmBoard {
     // Create board with requested strategy, cards pulled at random
     WasmBoard {
-        board: Board::new(if jailwait { Strategy::JailWait } else { Strategy::PayJail }, true),
+        board: Board::new(
+            if jailwait {
+                Strategy::JailWait
+            } else {
+                Strategy::PayJail
+            },
+            true,
+        ),
     }
 }
 
 #[wasm_bindgen]
 pub fn get_expected_frequencies(jailwait: bool) -> Vec<f64> {
     // Build probability matrices
-    let transmatrix = TransMatrix::new(if jailwait { Strategy::JailWait } else { Strategy::PayJail }, 6, false);
+    let transmatrix = TransMatrix::new(
+        if jailwait {
+            Strategy::JailWait
+        } else {
+            Strategy::PayJail
+        },
+        6,
+        false,
+    );
 
     // Get the steady state matrix
     let (_, mat) = transmatrix.steady_summary(|state| Some(state.position));

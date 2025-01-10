@@ -22,8 +22,13 @@ pub fn print_steady(mat: &TransMatrix, desc: &str) {
 
 // Generic matrix print functions
 
-pub fn print_matrix<T, RH, CH>(matrix: &DMatrix<T>, colheaders: Option<CH>, rowheaders: Option<RH>, rowcolhd: &str, transpose: bool)
-where
+pub fn print_matrix<T, RH, CH>(
+    matrix: &DMatrix<T>,
+    colheaders: Option<CH>,
+    rowheaders: Option<RH>,
+    rowcolhd: &str,
+    transpose: bool,
+) where
     T: nalgebra::Scalar + std::fmt::Display,
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
@@ -34,21 +39,28 @@ where
     let lencount = if transpose { matrix.nrows() } else { matrix.ncols() };
     let mut max_lens = vec![0; lencount + 1];
 
-    render_matrix(matrix, colheaders.clone(), rowheaders.clone(), rowcolhd, transpose, |(i, _j), value| {
-        match value {
-            RenderMatrixCb::RowColHd(d) => {
-                max_lens[i] = max(max_lens[i], d.len());
+    render_matrix(
+        matrix,
+        colheaders.clone(),
+        rowheaders.clone(),
+        rowcolhd,
+        transpose,
+        |(i, _j), value| {
+            match value {
+                RenderMatrixCb::RowColHd(d) => {
+                    max_lens[i] = max(max_lens[i], d.len());
+                }
+                RenderMatrixCb::ColHd(d) | RenderMatrixCb::RowHd(d) => {
+                    max_lens[i] = max(max_lens[i], format!("{d}").len());
+                }
+                RenderMatrixCb::Cell(d) => {
+                    max_lens[i] = max(max_lens[i], format!("{d}").len());
+                }
+                RenderMatrixCb::Eol => (),
             }
-            RenderMatrixCb::ColHd(d) | RenderMatrixCb::RowHd(d) => {
-                max_lens[i] = max(max_lens[i], format!("{d}").len());
-            }
-            RenderMatrixCb::Cell(d) => {
-                max_lens[i] = max(max_lens[i], format!("{d}").len());
-            }
-            RenderMatrixCb::Eol => (),
-        }
-        Ok(())
-    })
+            Ok(())
+        },
+    )
     .unwrap();
 
     // Print
