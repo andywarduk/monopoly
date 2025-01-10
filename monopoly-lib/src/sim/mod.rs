@@ -202,8 +202,8 @@ impl Board {
         // Perform any actions necessary
         match SPACES[self.position] {
             Space::GoToJail => self.move_to(Space::find(Space::Visit), MoveReason::GoToJail),
-            Space::CommunityChest(_) => self.draw_community_chest(),
-            Space::Chance(_) => self.draw_chance(),
+            Space::CommunityChest(_) => self.draw_community_chest(reason),
+            Space::Chance(_) => self.draw_chance(reason),
             _ => (),
         }
 
@@ -277,28 +277,39 @@ impl Board {
     }
 
     /// Draw a chance card and action it
-    fn draw_chance(&mut self) {
+    fn draw_chance(&mut self, reason: MoveReason) {
         let card = (self.chcardchoose)(&mut self.rng, &mut self.chdeck);
 
+        let reason = match reason {
+            MoveReason::Roll => MoveReason::CHCard,
+            _ => panic!("Unexpected reason in draw chance card"),
+        };
+
         match card {
-            CHCard::GoGo => self.move_to(Space::find(Space::Go), MoveReason::CHCard),
-            CHCard::GoJail => self.move_to(Space::find(Space::Visit), MoveReason::CHCard),
-            CHCard::GoProperty(set, n) => self.move_to(Space::find(Space::Property(set, n)), MoveReason::CHCard),
-            CHCard::GoRail(n) => self.move_to(Space::find(Space::Rail(n)), MoveReason::CHCard),
-            CHCard::GoNextRail => self.move_to(Space::next_rail(self.position), MoveReason::CHCard),
-            CHCard::GoNextUtil => self.move_to(Space::next_util(self.position), MoveReason::CHCard),
-            CHCard::Back3 => self.move_to(self.position - 3, MoveReason::CHCard),
+            CHCard::GoGo => self.move_to(Space::find(Space::Go), reason),
+            CHCard::GoJail => self.move_to(Space::find(Space::Visit), reason),
+            CHCard::GoProperty(set, n) => self.move_to(Space::find(Space::Property(set, n)), reason),
+            CHCard::GoRail(n) => self.move_to(Space::find(Space::Rail(n)), reason),
+            CHCard::GoNextRail => self.move_to(Space::next_rail(self.position), reason),
+            CHCard::GoNextUtil => self.move_to(Space::next_util(self.position), reason),
+            CHCard::Back3 => self.move_to(self.position - 3, reason),
             _ => (),
         }
     }
 
     /// Draw a community chest card and action it
-    fn draw_community_chest(&mut self) {
+    fn draw_community_chest(&mut self, reason: MoveReason) {
         let card = (self.cccardchoose)(&mut self.rng, &mut self.ccdeck);
 
+        let reason = match reason {
+            MoveReason::Roll => MoveReason::CCCard,
+            MoveReason::CHCard => MoveReason::CHCardCCCard,
+            _ => panic!("Unexpected reason in draw community chest card"),
+        };
+
         match card {
-            CCCard::GoGo => self.move_to(Space::find(Space::Go), MoveReason::CCCard),
-            CCCard::GoJail => self.move_to(Space::find(Space::Visit), MoveReason::CCCard),
+            CCCard::GoGo => self.move_to(Space::find(Space::Go), reason),
+            CCCard::GoJail => self.move_to(Space::find(Space::Visit), reason),
             _ => (),
         }
     }

@@ -314,7 +314,7 @@ where
         queue!(
             w,
             cursor::MoveTo(4 + (11 * XSPACE), *y + YPAD),
-            style::Print(format!("{desc:20} : {:>16}", value.num_format())),
+            style::Print(format!("{desc:20.20} : {:>16}", value.num_format())),
         )?;
 
         *y += 1;
