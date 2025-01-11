@@ -3,7 +3,7 @@ use std::{error::Error, path::Path};
 use clap::Parser;
 use cli::Cli;
 use console::{print_steady, print_summary};
-use csv::{write_jump_csv, write_move_csv, write_prob_csv, write_steady_csv, write_summary_csv};
+use csv::{write_jump_csv, write_move_csv, write_prob_csv, write_reason_csv, write_steady_csv, write_summary_csv};
 use monopoly_lib::calc::transmatrix::TransMatrix;
 use monopoly_lib::space::SPACES;
 use monopoly_lib::strategy::Strategy;
@@ -166,6 +166,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Write csv for combined probabilities for wait strategy
     write_prob_csv(Path::new("csv/wait_frac.csv"), &wait_map, false)?;
     write_prob_csv(Path::new("csv/wait_flt.csv"), &wait_map, true)?;
+
+    // Write csv for reason probabilities for both strategies
+    write_reason_csv(Path::new("csv/pay_reason.csv"), &pay_reason_prob)?;
+    write_reason_csv(Path::new("csv/wait_reason.csv"), &wait_reason_prob)?;
 
     // Write csv for jump probabilities (same for both strategies)
     write_jump_csv(Path::new("csv/jump_frac.csv"), &wait_map, false)?;

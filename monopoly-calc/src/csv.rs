@@ -1,8 +1,9 @@
 use std::io::Write;
 use std::{error::Error, fs::File, path::Path};
 
+use monopoly_lib::movereason::{IntoEnumIterator, MoveReason};
 use monopoly_lib::{calc::transmatrix::TransMatrix, space::SPACES};
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, Matrix};
 
 use crate::matrix::render_matrix;
 
@@ -86,11 +87,29 @@ where
     Ok(())
 }
 
+pub fn write_reason_csv<R, C, S>(file: &Path, matrix: &Matrix<f64, R, C, S>) -> Result<(), Box<dyn Error>>
+where
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<f64, R, C>,
+    nalgebra::DefaultAllocator: nalgebra::allocator::Allocator<C, R>,
+{
+    write_matrix_csv(
+        file,
+        matrix,
+        Some(SPACES.iter()),
+        Some(MoveReason::iter().filter(|m| *m as isize >= 0)),
+        "Reason \\ Space",
+        false,
+        |p| p.to_string(),
+    )
+}
+
 // Generic matrix to csv functions
 
-pub fn write_matrix_csv<T, RH, CH, F>(
+pub fn write_matrix_csv<T, R, C, S, RH, CH, F>(
     file: &Path,
-    matrix: &DMatrix<T>,
+    matrix: &Matrix<T, R, C, S>,
     colheaders: Option<CH>,
     rowheaders: Option<RH>,
     rowcolhd: &str,
@@ -98,6 +117,10 @@ pub fn write_matrix_csv<T, RH, CH, F>(
     format: F,
 ) -> Result<(), Box<dyn Error>>
 where
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<T, R, C>,
+    nalgebra::DefaultAllocator: nalgebra::allocator::Allocator<C, R>,
     T: nalgebra::Scalar,
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
