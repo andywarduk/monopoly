@@ -15,21 +15,6 @@ pub enum Space {
 }
 
 impl Space {
-    pub fn shortdesc(&self) -> String {
-        match self {
-            Go => "Go".to_string(),
-            Visit => "Jail".to_string(),
-            FreeParking => "Free".to_string(),
-            GoToJail => "ToJail".to_string(),
-            Property(set, i) => format!("{}{}", (set + b'A') as char, i + 1),
-            Rail(i) => format!("R{}", i + 1),
-            Utility(i) => format!("U{}", i + 1),
-            CommunityChest(i) => format!("CC{}", i + 1),
-            Chance(i) => format!("CH{}", i + 1),
-            Tax(i) => format!("T{}", i + 1),
-        }
-    }
-
     pub fn set(&self) -> PropertySet {
         match self {
             Go | Visit | FreeParking | GoToJail => PropertySet::Other,
@@ -80,6 +65,25 @@ impl Space {
         }
 
         panic!("Next space not found")
+    }
+}
+
+impl std::fmt::Display for Space {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let desc = match self {
+            Go => "Go".to_string(),
+            Visit => "Jail".to_string(),
+            FreeParking => "Free".to_string(),
+            GoToJail => "ToJail".to_string(),
+            Property(set, i) => format!("{}{}", (set + b'A') as char, i + 1),
+            Rail(i) => format!("R{}", i + 1),
+            Utility(i) => format!("U{}", i + 1),
+            CommunityChest(i) => format!("CC{}", i + 1),
+            Chance(i) => format!("CH{}", i + 1),
+            Tax(i) => format!("T{}", i + 1),
+        };
+
+        desc.fmt(f)
     }
 }
 

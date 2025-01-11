@@ -17,7 +17,7 @@ then
 fi
 
 # Package in to the html directory
-./package/target/release/package template/index.htm html
+../target/release/package template/index.htm html
 
 if [ $? -ne 0 ]
 then

@@ -39,13 +39,11 @@ pub fn write_move_csv(file: &Path, mat: &TransMatrix, float: bool) -> Result<(),
 }
 
 pub fn write_jump_csv(file: &Path, mat: &TransMatrix, float: bool) -> Result<(), Box<dyn Error>> {
-    let iter = SPACES.iter().map(|s| s.shortdesc());
-
     write_matrix_csv(
         file,
         mat.jumpmat(),
-        Some(iter.clone()),
-        Some(iter),
+        Some(SPACES.iter()),
+        Some(SPACES.iter()),
         "From \\ To",
         false,
         |p| {

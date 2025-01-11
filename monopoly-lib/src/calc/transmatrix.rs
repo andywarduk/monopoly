@@ -1,10 +1,8 @@
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, SMatrix};
 #[cfg(debug_assertions)]
 use nalgebra::{Dim, Matrix, RawStorage};
 use std::collections::BTreeMap;
 use std::hash::Hash;
-use std::iter::Sum;
-use strum::EnumCount;
 
 use crate::chance::CHCard;
 use crate::commchest::CCCard;
@@ -19,14 +17,22 @@ use super::state::State;
 const ROLL_PROB: Probability = p!(1 / 36);
 
 pub struct TransMatrix {
+    /// Strategy used for calculation
+    strategy: Strategy,
+    /// List of states used in the Markov chains
     states: BTreeMap<State, usize>,
+    /// Transition matrix of movement depending on dice roll
     movemat: DMatrix<Probability>,
+    /// Transition matrix of jumps after landing on a space
     jumpmat: DMatrix<Probability>,
+    /// Combined movement and jump transition matrix
     combinedmat: DMatrix<Probability>,
+    /// Combined transition matrix steady state vector
     steady: DMatrix<f64>,
 }
 
 impl TransMatrix {
+    /// Calculates transition matrices and steady state (to required dp accuracy) for a given strategy
     pub fn new(strategy: Strategy, accuracydp: u8, debug: bool) -> Self {
         // Build jump matrix
         let jumpmat = Self::build_jumpmat(debug);
@@ -37,10 +43,11 @@ impl TransMatrix {
         // Create move matrix
         let (movemat, combinedmat) = Self::build_movemat(&states, &jumpmat, strategy, debug);
 
-        // Calculate steady state matrix
+        // Calculate steady state vector
         let steady = Self::calc_steady(&combinedmat, &states, accuracydp, debug);
 
         Self {
+            strategy,
             states,
             movemat,
             jumpmat,
@@ -49,45 +56,76 @@ impl TransMatrix {
         }
     }
 
+    /// Returns a reference to the state map
     pub fn states(&self) -> &BTreeMap<State, usize> {
         &self.states
     }
 
+    /// Returns a reference to the movement transition matrix
     pub fn movemat(&self) -> &DMatrix<Probability> {
         &self.movemat
     }
 
+    /// Returns a reference to the jump transition matrix
     pub fn jumpmat(&self) -> &DMatrix<Probability> {
         &self.jumpmat
     }
 
+    /// Returns a reference to the combined movement and jump transition matrix
     pub fn combinedmat(&self) -> &DMatrix<Probability> {
         &self.combinedmat
     }
 
+    /// Returns a reference to the combined steady state matrix
     pub fn steady(&self) -> &DMatrix<f64> {
         &self.steady
     }
 
-    pub fn steady_group_sum<T, F>(&self, cb: F) -> (Vec<T>, DMatrix<f64>)
+    /// Filters and summarises the steady state matrix to a btree
+    pub fn steady_group_sum<T, F>(&self, cb: F) -> BTreeMap<T, f64>
     where
-        T: Clone + Hash + Eq + Ord,
+        T: Hash + Eq + Ord,
         F: Fn(&State) -> Option<T>,
     {
         let mut summary = BTreeMap::new();
 
+        // Loop all entries in the steady state vector
         for (prob, state) in self.steady.iter().zip(self.states.keys()) {
+            // Call callback to get the group this entry belongs to (if any)
             if let Some(group) = cb(state) {
+                // Add to the group
                 *summary.entry(group).or_insert(0.0) += *prob;
             }
         }
 
+        summary
+    }
+
+    /// Filters and summarises the steady state matrix to a group vector and value matrix
+    pub fn steady_group_sum_split<T, F>(&self, cb: F) -> (Vec<T>, DMatrix<f64>)
+    where
+        T: Clone + Hash + Eq + Ord,
+        F: Fn(&State) -> Option<T>,
+    {
+        // Build summary
+        let summary = self.steady_group_sum(cb);
+
+        // Extract group vector
         let groups = summary.keys().cloned().collect::<Vec<_>>();
+
+        // Extract probability vector
         let mat = DMatrix::from_iterator(1, summary.len(), summary.values().cloned());
 
         (groups, mat)
     }
 
+    /// Get steady state vector entry by state
+    pub fn steady_ent(&self, state: &State) -> f64 {
+        let ent = self.states.get(state).expect("State not found");
+        self.steady[(0, *ent)]
+    }
+
+    /// Sum entries in the steady state vector
     pub fn steady_sum<F>(&self, cb: F) -> f64
     where
         F: Fn(&State) -> bool,
@@ -99,45 +137,7 @@ impl TransMatrix {
             .sum()
     }
 
-    pub fn sum_combined_prob(&self, from_filter: fn(&State) -> bool, to_filter: fn(&State) -> bool) -> Probability {
-        Self::sum_matrix_entries(
-            self.combinedmat(),
-            self.states.keys(),
-            self.states.keys(),
-            from_filter,
-            to_filter,
-        )
-    }
-
-    pub fn sum_matrix_entries<T: Sum + Copy, RI, CI, RF, CF>(
-        matrix: &DMatrix<T>,
-        row_iter: impl Iterator<Item = RI>,
-        col_iter: impl Iterator<Item = CI> + Clone,
-        row_filter: RF,
-        col_filter: CF,
-    ) -> T
-    where
-        RF: Fn(RI) -> bool,
-        CF: Fn(CI) -> bool,
-    {
-        matrix
-            .row_iter()
-            .zip(row_iter)
-            .filter_map(|(row, ri)| {
-                if row_filter(ri) {
-                    Some(
-                        row.iter()
-                            .zip(col_iter.clone())
-                            .filter_map(|(ent, ci)| if col_filter(ci) { Some(*ent) } else { None })
-                            .sum::<T>(),
-                    )
-                } else {
-                    None
-                }
-            })
-            .sum()
-    }
-
+    /// Build the jump transition matrix
     fn build_jumpmat(debug: bool) -> DMatrix<Probability> {
         // Initialise jump transition map
         let dim = SPACES.len();
@@ -151,7 +151,7 @@ impl TransMatrix {
         // Loop all positions and build jump probability map
         for (startidx, startpos) in SPACES.iter().enumerate() {
             if debug {
-                print!("  Jump from {}:", startpos.shortdesc());
+                print!("  Jump from {startpos}:");
             }
 
             // Handle Go to jail / Chance / Community chest jumps
@@ -200,7 +200,7 @@ impl TransMatrix {
                 jumpmat[(i, j)] += *probability;
 
                 if debug {
-                    print!(" {}-{probability}", pos.shortdesc());
+                    print!(" {pos}-{probability}");
                 }
             }
 
@@ -215,6 +215,7 @@ impl TransMatrix {
         jumpmat
     }
 
+    /// Build the move and combined transition matrices
     fn build_movemat(
         states: &BTreeMap<State, usize>,
         jumpmat: &DMatrix<Probability>,
@@ -323,6 +324,7 @@ impl TransMatrix {
         (movemat, combmat)
     }
 
+    /// Calculate probability of a jump recursively
     fn process_jumps(jump_state: &mut JumpState, move_state: State, parent_prob: Probability) {
         // Get jumps from the new position
         let jumps = jump_state.jumpmat.row(move_state.position);
@@ -365,6 +367,7 @@ impl TransMatrix {
         }
     }
 
+    /// Calculate the steady state vector from the combined transition matrix
     fn calc_steady(
         combinedmat: &DMatrix<Probability>,
         states: &BTreeMap<State, usize>,
@@ -411,6 +414,7 @@ impl TransMatrix {
             // Set next state as current state
             steady = next_steady;
 
+            // Reached required accuracy?
             if max_delta < req_acc {
                 if debug {
                     println!("Required accuracy found");
@@ -427,61 +431,102 @@ impl TransMatrix {
         steady
     }
 
-    pub fn calc_movereason_probabilty(&self) -> Vec<Vec<f64>> {
-        let mut probabilities = vec![vec![]; MoveReason::COUNT];
+    /// Calculate the move reason probability matrix
+    pub fn calc_movereason_probabilty(&self) -> SMatrix<f64, { MoveReason::uint_count() }, SPACECOUNT> {
+        // Initialsie the matrix
+        let mut probabilities: SMatrix<f64, { MoveReason::uint_count() }, SPACECOUNT> = SMatrix::zeros();
 
+        // Calculate chance, community chest and CH3->CC3 matrix rows
         let (chprob, ccprob, ch3cc3prob) = self.calc_chance_cc_prob();
 
-        let jail = Space::find(Space::GoToJail);
+        probabilities.set_row(MoveReason::CCCard as usize, &ccprob);
+        probabilities.set_row(MoveReason::CHCard as usize, &chprob);
+        probabilities.set_row(MoveReason::CHCardCCCard as usize, &ch3cc3prob);
+
+        // Find spaces
+        let g2j = Space::find(Space::GoToJail);
         let visit = Space::find(Space::Visit);
 
-        probabilities[MoveReason::CCCard as usize] = ccprob;
-        probabilities[MoveReason::CHCard as usize] = chprob;
-        probabilities[MoveReason::CHCardCCCard as usize] = ch3cc3prob;
-        probabilities[MoveReason::GoToJail as usize] = vec![0.0; SPACECOUNT];
-        probabilities[MoveReason::TripleDouble as usize] = vec![0.0; SPACECOUNT];
-        probabilities[MoveReason::NoDouble as usize] = vec![0.0; SPACECOUNT];
-        probabilities[MoveReason::ExitJail as usize] = vec![0.0; SPACECOUNT];
+        // Probability of not rolling double while in jail
+        let nodoubleprob = if self.strategy == Strategy::JailWait {
+            (p!(5 / 6).as_f64() * self.steady_ent(&State::new(0, g2j, 0)))
+                + (p!(5 / 6).as_f64() * self.steady_ent(&State::new(0, g2j, 1)))
+        } else {
+            0.0
+        };
 
-        // TODO calculate
-        probabilities[MoveReason::TripleDouble as usize][jail] = 0.0; // Prob rolling double 3 times while not in jail
-        probabilities[MoveReason::NoDouble as usize][jail] = 0.0; // Prob not rolling double while in jail
-        probabilities[MoveReason::GoToJail as usize][jail] = 0.0; // Prob landing on go to jail
-        probabilities[MoveReason::ExitJail as usize][visit] = 0.0; // Prob not rolling double 3 times
+        probabilities[(MoveReason::NoDouble as usize, g2j)] = nodoubleprob;
+
+        // Probability of not rolling a double 3 times
+        let exitjailprob = if self.strategy == Strategy::JailWait {
+            p!(5 / 6).as_f64() * self.steady_ent(&State::new(0, g2j, 2))
+        } else {
+            0.0
+        };
+
+        probabilities[(MoveReason::ExitJail as usize, visit)] = exitjailprob;
+
+        // Probability of rolling double 3 times while not in jail
+        let tripledouble = p!(1 / 6).as_f64() * self.steady_sum(|state| state.doubles == 2);
+
+        probabilities[(MoveReason::TripleDouble as usize, g2j)] = tripledouble;
+
+        // Probability of landing on go to jail space
+        probabilities[(MoveReason::GoToJail as usize, g2j)] =
+            self.steady_sum(|state| state.position == g2j) - probabilities.column(g2j).sum();
 
         probabilities
     }
 
-    fn calc_chance_cc_prob(&self) -> (Vec<f64>, Vec<f64>, Vec<f64>) {
-        let (_, mat) = self.steady_group_sum(|state| Some(state.position));
-
+    // Calculate chance, community chest and CH3->CC3 move reason probability matrix rows
+    fn calc_chance_cc_prob(
+        &self,
+    ) -> (
+        SMatrix<f64, 1, SPACECOUNT>,
+        SMatrix<f64, 1, SPACECOUNT>,
+        SMatrix<f64, 1, SPACECOUNT>,
+    ) {
         // Calculate probability of first landing on a space
-        let land1 = mat.map_with_location(|_i, j, p| p / self.jumpmat()[(j, j)].as_f64());
+        let land1: SMatrix<f64, 1, SPACECOUNT> = SMatrix::from_iterator(
+            self.steady_group_sum(|state| Some(state.position))
+                .iter()
+                .map(|(&i, p)| p / self.jumpmat()[(i, i)].as_f64()),
+        );
 
-        let mut chprob = vec![0.0; SPACECOUNT];
-        let mut ccprob = vec![0.0; SPACECOUNT];
-        let mut ch3cc3prob = vec![0.0; SPACECOUNT];
+        // Initialise probability vectors
+        let mut chprob: SMatrix<f64, 1, SPACECOUNT> = SMatrix::zeros();
+        let mut ccprob: SMatrix<f64, 1, SPACECOUNT> = SMatrix::zeros();
+        let mut ch3cc3prob: SMatrix<f64, 1, SPACECOUNT> = SMatrix::zeros();
 
+        // Find spaces
         let ch3pos = Space::find(Space::Chance(2));
         let cc3pos = Space::find(Space::CommunityChest(2));
+
+        // Initialise CH3->CC3 probability
         let mut ch3cc3probmult = 0.0;
 
-        for (pos, p1) in land1.into_iter().enumerate() {
+        for (pos, p1) in land1.iter().enumerate() {
             match SPACES[pos] {
                 Space::CommunityChest(_) => {
+                    // Find jump probabilities for community chest space (excluding self)
                     for (j, p2) in self.jumpmat().row(pos).iter().enumerate().filter(|(j, _)| *j != pos) {
+                        // Calculate the resultant probability (landing on space then jumping)
                         ccprob[j] += p1 * p2.as_f64();
 
                         if pos == cc3pos {
+                            // Save probability of jumping in to CH3 -> CC3 vector as well (multiplied later)
                             ch3cc3prob[j] += p2.as_f64();
                         }
                     }
                 }
                 Space::Chance(_) => {
+                    // Find jump probabilities for chance space (excluding self)
                     for (j, p2) in self.jumpmat().row(pos).iter().enumerate().filter(|(j, _)| *j != pos) {
+                        // Calculate the resultant probability (landing on space then jumping)
                         chprob[j] += p1 * p2.as_f64();
 
-                        if pos == ch3pos {
+                        if pos == ch3pos && j == cc3pos {
+                            // Save probability of landing on CH3 then going to CC3
                             ch3cc3probmult = p1 * p2.as_f64();
                         }
                     }
@@ -490,12 +535,17 @@ impl TransMatrix {
             }
         }
 
+        // Multiply each CH3 -> CC3 probabilities by the probability of going from CH3 to CC3
         ch3cc3prob.iter_mut().enumerate().for_each(|(i, p)| {
             *p *= ch3cc3probmult;
+
+            // Subtract the resultant probability from the community chest probability
             ccprob[i] -= *p;
         });
 
-        chprob[cc3pos] -= ch3cc3prob.iter().sum::<f64>();
+        // Subtract the total CH3 -> CC3 probability vector from the CH3 -> CC3 probability
+        let ch3cc3tot = ch3cc3prob.iter().sum::<f64>();
+        chprob[cc3pos] -= ch3cc3tot;
 
         (chprob, ccprob, ch3cc3prob)
     }
@@ -511,8 +561,8 @@ struct JumpState<'a> {
 }
 
 #[cfg(debug_assertions)]
+/// Checks the sum of probabilities is 1.0
 fn check_jump_probs(jump_probs: &[(Space, Probability)]) {
-    // Sum of probabilities should be 1
     assert_eq!(
         jump_probs.iter().map(|(_, p)| p).copied().sum::<Probability>(),
         Probability::ALWAYS
@@ -520,14 +570,13 @@ fn check_jump_probs(jump_probs: &[(Space, Probability)]) {
 }
 
 #[cfg(debug_assertions)]
+/// Checks the sum of probabilities in each matrix row is 1.0
 fn check_matrix<R, C, S>(transprob: &Matrix<Probability, R, C, S>)
 where
     R: Dim,
     C: Dim,
     S: RawStorage<Probability, R, C>,
 {
-    // Sum of probabilities for each row should be 1
-
     for row in transprob.row_iter() {
         assert_eq!(row.iter().copied().sum::<Probability>(), Probability::ALWAYS);
     }

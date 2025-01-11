@@ -1,4 +1,5 @@
 use num_derive::FromPrimitive;
+pub use strum::IntoEnumIterator;
 use strum::{EnumCount, EnumIter};
 
 #[derive(Debug, PartialEq, Eq, FromPrimitive, EnumCount, EnumIter, Clone, Copy)]
@@ -11,6 +12,12 @@ pub enum MoveReason {
     TripleDouble = 4, // Triple double rolled
     NoDouble = 5,     // In jail and not rolled a double
     ExitJail = 6,     // Exited jail
+}
+
+impl MoveReason {
+    pub const fn uint_count() -> usize {
+        MoveReason::COUNT - 1
+    }
 }
 
 impl std::fmt::Display for MoveReason {

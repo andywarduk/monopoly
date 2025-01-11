@@ -8,7 +8,9 @@ use monopoly_lib::calc::transmatrix::TransMatrix;
 use monopoly_lib::space::SPACES;
 use monopoly_lib::strategy::Strategy;
 use rust_xlsxwriter::Workbook;
-use sheet::{write_jump_sheet, write_move_sheet, write_prob_sheet, write_steady_sheet, write_summary_sheet};
+use sheet::{
+    write_jump_sheet, write_move_sheet, write_prob_sheet, write_reason_sheet, write_steady_sheet, write_summary_sheet,
+};
 
 mod cli;
 mod console;
@@ -21,23 +23,25 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // Calc probabilities when paying to get out of jail
     let pay_map = TransMatrix::new(Strategy::PayJail, cli.dp, cli.debug);
+    let pay_reason_prob = pay_map.calc_movereason_probabilty();
 
     // Calc probabilities when rolling to get out of jail
     let wait_map = TransMatrix::new(Strategy::JailWait, cli.dp, cli.debug);
+    let wait_reason_prob = wait_map.calc_movereason_probabilty();
 
     // Summarise steady state for pay strategy by board position
     let (pay_space_headings, pay_space_mat) =
-        pay_map.steady_group_sum(|state| Some(SPACES[state.position].shortdesc()));
+        pay_map.steady_group_sum_split(|state| Some(format!("{}", SPACES[state.position])));
 
     // Summarise steady state for pay strategy by board set
-    let (pay_set_headings, pay_set_mat) = pay_map.steady_group_sum(|state| Some(SPACES[state.position].set()));
+    let (pay_set_headings, pay_set_mat) = pay_map.steady_group_sum_split(|state| Some(SPACES[state.position].set()));
 
     // Summarise steady state for wait strategy by board position
     let (wait_space_headings, wait_space_mat) =
-        wait_map.steady_group_sum(|state| Some(SPACES[state.position].shortdesc()));
+        wait_map.steady_group_sum_split(|state| Some(format!("{}", SPACES[state.position])));
 
     // Summarise steady state for wait strategy by board set
-    let (wait_set_headings, wait_set_mat) = wait_map.steady_group_sum(|state| Some(SPACES[state.position].set()));
+    let (wait_set_headings, wait_set_mat) = wait_map.steady_group_sum_split(|state| Some(SPACES[state.position].set()));
 
     // -- Spreadsheet Output --
 
@@ -91,6 +95,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     write_move_sheet(&mut workbook, "Pay Moves Flt", &pay_map, true)?;
     write_move_sheet(&mut workbook, "Wait Moves Frac", &wait_map, false)?;
     write_move_sheet(&mut workbook, "Wait Moves Flt", &wait_map, true)?;
+
+    // Write worksheets for reason probabilities for both strategies
+    write_reason_sheet(&mut workbook, "Pay Reason", &pay_reason_prob)?;
+    write_reason_sheet(&mut workbook, "Wait Reason", &wait_reason_prob)?;
 
     // Write worksheets for jump probabilities (same for both strategies)
     write_jump_sheet(&mut workbook, "Jumps Frac", &wait_map, false)?;

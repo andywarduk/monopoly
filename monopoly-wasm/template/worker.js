@@ -4,7 +4,7 @@ console.debug("Worker started");
 // Load the WASM linkage
 import init, { create_board, get_expected_frequencies } from "$link(prefix=./|../pkg/monopoly_wasm.js)";
 
-import { perf_now, perf_end } from "$link(perf.js)";
+import { perf_now, perf_end } from "$link(prefix=./|perf.js)";
 
 // Debugging flag
 let debug = false;

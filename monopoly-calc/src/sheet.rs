@@ -2,9 +2,10 @@ use std::error::Error;
 
 use monopoly_lib::{
     calc::{probability::Probability, transmatrix::TransMatrix},
+    movereason::{IntoEnumIterator, MoveReason},
     space::SPACES,
 };
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, Matrix};
 use num_traits::NumCast;
 use rust_xlsxwriter::{IntoExcelData, Workbook};
 
@@ -35,9 +36,15 @@ pub fn write_move_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix, floa
 }
 
 pub fn write_jump_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix, float: bool) -> Result<(), Box<dyn Error>> {
-    let iter = SPACES.iter().map(|s| s.shortdesc());
-
-    write_matrix_prob_sheet(book, name, mat.jumpmat(), Some(iter.clone()), Some(iter), false, float)
+    write_matrix_prob_sheet(
+        book,
+        name,
+        mat.jumpmat(),
+        Some(SPACES.iter()),
+        Some(SPACES.iter()),
+        false,
+        float,
+    )
 }
 
 pub fn write_steady_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix) -> Result<(), Box<dyn Error>> {
@@ -48,6 +55,28 @@ pub fn write_steady_sheet(book: &mut Workbook, name: &str, mat: &TransMatrix) ->
         None::<Vec<bool>>,
         Some(mat.states().keys()),
         true,
+        |p| *p,
+    )
+}
+
+pub fn write_reason_sheet<R, C, S>(
+    book: &mut Workbook,
+    name: &str,
+    matrix: &Matrix<f64, R, C, S>,
+) -> Result<(), Box<dyn Error>>
+where
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<f64, R, C>,
+    nalgebra::DefaultAllocator: nalgebra::allocator::Allocator<C, R>,
+{
+    write_matrix_sheet(
+        book,
+        name,
+        matrix,
+        Some(SPACES.iter()),
+        Some(MoveReason::iter().filter(|m| *m as isize >= 0)),
+        false,
         |p| *p,
     )
 }
@@ -96,10 +125,10 @@ where
     Ok(())
 }
 
-pub fn write_matrix_sheet<T, RH, CH, F, FR>(
+pub fn write_matrix_sheet<T, R, C, S, RH, CH, F, FR>(
     book: &mut Workbook,
     name: &str,
-    matrix: &DMatrix<T>,
+    matrix: &Matrix<T, R, C, S>,
     colheaders: Option<CH>,
     rowheaders: Option<RH>,
     transpose: bool,
@@ -107,6 +136,10 @@ pub fn write_matrix_sheet<T, RH, CH, F, FR>(
 ) -> Result<(), Box<dyn Error>>
 where
     T: nalgebra::Scalar,
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<T, R, C>,
+    nalgebra::DefaultAllocator: nalgebra::allocator::Allocator<C, R>,
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
     CH: IntoIterator + Clone,

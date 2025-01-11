@@ -126,7 +126,7 @@ pub fn get_expected_frequencies(jailwait: bool) -> WasmFreq {
     );
 
     // Sum the steady state matrix by position
-    let (_, mat) = transmatrix.steady_group_sum(|state| Some(state.position));
+    let (_, mat) = transmatrix.steady_group_sum_split(|state| Some(state.position));
 
     // Convert to vector
     let space_prob = mat.into_iter().copied().collect();
@@ -134,8 +134,8 @@ pub fn get_expected_frequencies(jailwait: bool) -> WasmFreq {
     // Calculate move reason frequencies
     let movereason_prob = transmatrix
         .calc_movereason_probabilty()
+        .transpose()
         .iter()
-        .flatten()
         .copied()
         .collect::<Vec<_>>();
 

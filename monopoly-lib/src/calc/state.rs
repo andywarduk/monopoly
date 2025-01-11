@@ -68,7 +68,7 @@ impl State {
 
 impl Display for State {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        let mut output = format!("[{}", SPACES[self.position].shortdesc());
+        let mut output = format!("[{}", SPACES[self.position]);
 
         if self.doubles > 0 {
             output.push_str(&format!(" d{}", self.doubles));

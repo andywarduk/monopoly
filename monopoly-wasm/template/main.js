@@ -1,10 +1,11 @@
-import { perf_now, perf_end, perf_mark } from "$link(perf.js)";
+import { perf_now, perf_end, perf_mark } from "$link(prefix=./|perf.js)";
 
 const debug = false; // Set to true to debug this script
 const workerdebug = false; // Set to true to debug worker
 
 const turn_chunk = 100_000; // Number of iterations to perform in each chunk
-const autopause = 100_000_000; // Number of iterations before automatically pausing
+const autopause_small = 100_000_000; // Number of iterations before automatically pausing
+const autopause_big = 1_000_000_000; // Number of iterations before automatically pausing
 let turn_target; // Next iteration target
 
 // Spinner state
@@ -15,6 +16,7 @@ let paused = false;
 let jailwait = false;
 let split_just_visiting = true;
 let full_leaderboard = false;
+let showreasons = true;
 
 // Worker thread object
 let worker;
@@ -115,11 +117,9 @@ function process_worker_message(msg) {
             // Hide spinner
             spinner_show(false);
 
-            // Start worker executing to first autopause target
-            turn_target = autopause;
-
             if (!paused) {
-                worker_exec_start();
+                // Start worker executing to first small autopause target
+                worker_exec_start(autopause_small);
             }
 
             break;
@@ -142,8 +142,7 @@ function process_worker_message(msg) {
             // Autopaused?
             if (msg.data.paused) {
                 paused = true;
-                turn_target += autopause;
-                update_pause_button();
+                update_playpause_buttons();
             }
 
             // Extract number of turns from stats
@@ -176,13 +175,23 @@ function worker_init(first) {
     spinner_message("Initialising...");
     spinner_show(true);
 
+    // Clear any stats
+    last_stats = undefined;
+
     // Tell worker to (re)initialise
     worker.postMessage({ msgtype: (first ? "init" : "reinit"), jailwait: jailwait, debug: workerdebug })
 }
 
 // Get the worker to execute a chunk
-function worker_exec_start() {
+function worker_exec_start(autopause) {
+    if (last_stats) {
+        turn_target = (Math.trunc(Number(last_stats.turns) / autopause) + 1) * autopause;
+    } else {
+        turn_target = autopause;
+    }
+
     perf_mark("postMessageExecStart");
+
     worker.postMessage({ msgtype: "execstart", target_turns: turn_target, chunk_size: turn_chunk });
 }
 
@@ -296,10 +305,13 @@ function setup_rolltable() {
 
 function setup_buttons() {
     // Set up pause/play button
-    update_pause_button();
+    update_playpause_buttons();
 
-    const pause = document.getElementById("pause");
-    pause.onclick = pause_click;
+    const playpause1 = document.getElementById("playpause1");
+    playpause1.onclick = playpause1_click;
+
+    const playpause2 = document.getElementById("playpause2");
+    playpause2.onclick = playpause2_click;
 
     // Set up split jail stats button
     update_jailstats_button();
@@ -312,6 +324,12 @@ function setup_buttons() {
 
     const fullboard = document.getElementById("fullboard");
     fullboard.onclick = fullboard_click;
+
+    // Set up show reasons button
+    update_showreasons_button();
+
+    const showreasons = document.getElementById("showreasons");
+    showreasons.onclick = showreasons_click;
 
     // Set up strategy button
     update_strategy_button();
@@ -777,59 +795,61 @@ function update_percentages_and_leaderboard(stats) {
         // Add leaderboard main entry
         add_leaderboard_row(tbody, 'S', [elem, sub], stat, stats.moves, expected)
 
-        // Get arrival reasons
-        let reasons;
+        if (showreasons) {
+            // Get arrival reasons
+            let reasons;
 
-        if (code == 'J' && sub !== 2) {
-            // Get reasons from go to jail for jail
-            reasons = stats.reasons[space_g2j];
-        } else if (code == 'g') {
-            // No reasons for actual go to jail
-            reasons = [];
-        } else {
-            reasons = stats.reasons[elem];
-        }
-
-        let sort_reasons = [];
-
-        // Special handling for Just Visiting for Jail space
-        if (!split_just_visiting && code == 'J') {
-            sort_reasons.push(['J', [], stats.arrivals[space_visit]]);
-        }
-
-        // Add arrival reasons
-        for (const [index, count] of reasons.entries()) {
-            if (count == 0) {
-                // Skip zeroes
-                continue;
-            }
-
-            sort_reasons.push(['R', [index, elem, sub], count]);
-        }
-
-        // Sort descending
-        sort_reasons.sort((a, b) => Number(b[2]) - Number(a[2]));
-
-        // Add to the leaderboard
-        for (const [type, idxelems, count] of sort_reasons) {
-            let rexpected = 0;
-
-            switch (type) {
-                case 'R':
-                    rexpected = expected_elems.reduce((acc, elem) => acc + expected_movereason_freq[idxelems[0]][elem], 0);
-                    break;
-                case 'J':
-                    rexpected = expected_freq[space_visit];
-                    break;
-            }
-
-            if (rexpected == 0) {
-                rexpected = undefined;
+            if (code == 'J' && sub !== 2) {
+                // Get reasons from go to jail for jail
+                reasons = stats.reasons[space_g2j];
+            } else if (code == 'g') {
+                // No reasons for actual go to jail
+                reasons = [];
             } else {
-                rexpected /= expected
+                reasons = stats.reasons[elem];
             }
 
-            add_leaderboard_row(tbody, type, idxelems, count, stat, rexpected);
+            let sort_reasons = [];
+
+            // Special handling for Just Visiting for Jail space
+            if (!split_just_visiting && code == 'J') {
+                sort_reasons.push(['J', [], stats.arrivals[space_visit]]);
+            }
+
+            // Add arrival reasons
+            for (const [index, count] of reasons.entries()) {
+                if (count == 0) {
+                    // Skip zeroes
+                    continue;
+                }
+
+                sort_reasons.push(['R', [index, elem, sub], count]);
+            }
+
+            // Sort descending
+            sort_reasons.sort((a, b) => Number(b[2]) - Number(a[2]));
+
+            // Add to the leaderboard
+            for (const [type, idxelems, count] of sort_reasons) {
+                let rexpected = 0;
+
+                switch (type) {
+                    case 'R':
+                        rexpected = expected_elems.reduce((acc, elem) => acc + expected_movereason_freq[idxelems[0]][elem], 0);
+                        break;
+                    case 'J':
+                        rexpected = expected_freq[space_visit];
+                        break;
+                }
+
+                if (rexpected == 0) {
+                    rexpected = undefined;
+                } else {
+                    rexpected /= expected
+                }
+
+                add_leaderboard_row(tbody, type, idxelems, count, stat, rexpected);
+            }
         }
     }
 }
@@ -1125,29 +1145,47 @@ function spinner_show(visible) {
     }
 }
 
-// Pause/Play button
+// Pause/Play buttons
 
-function pause_click() {
+function playpause1_click() {
     // Pause/play button click handler
     paused = !paused;
 
-    update_pause_button();
+    update_playpause_buttons();
 
     if (paused) {
         worker_exec_stop();
     } else {
-        worker_exec_start();
+        worker_exec_start(autopause_small);
     }
 }
 
-function update_pause_button() {
+function playpause2_click() {
+    // Pause/play button click handler
+    paused = !paused;
+
+    update_playpause_buttons();
+
+    if (paused) {
+        worker_exec_stop();
+    } else {
+        worker_exec_start(autopause_big);
+    }
+}
+
+function update_playpause_buttons() {
     // Update pause/play button
-    const pause = document.getElementById("pause");
+    const playpause1 = document.getElementById("playpause1");
+    const playpause2 = document.getElementById("playpause2");
+
+    const formatter = Intl.NumberFormat();
 
     if (!paused) {
-        pause.innerText = "⏸︎ Pause";
+        playpause1.innerText = "⏸︎ Pause";
+        playpause2.innerText = "⏸︎ Pause";
     } else {
-        pause.innerText = "▶ Play";
+        playpause1.innerText = "▶ Play " + formatter.format(autopause_small);
+        playpause2.innerText = "▶ Play " + formatter.format(autopause_big);
     }
 }
 
@@ -1211,6 +1249,31 @@ function update_fullboard_button() {
     }
 }
 
+// Show reasons control
+
+function showreasons_click() {
+    // Full leaderboard button click handler
+    showreasons = !showreasons;
+
+    update_showreasons_button();
+}
+
+function update_showreasons_button() {
+    // Update full leaderboard button
+    const btn = document.getElementById("showreasons");
+
+    if (showreasons) {
+        btn.innerText = "Hide Reasons";
+    } else {
+        btn.innerText = "Show Reasons";
+    }
+
+    if (last_stats) {
+        // Re-process last stats
+        process_stats(last_stats);
+    }
+}
+
 // Strategy control
 
 function strategy_click() {
@@ -1222,7 +1285,7 @@ function strategy_click() {
     if (paused) {
         // Unpause
         paused = false;
-        update_pause_button();
+        update_playpause_buttons();
     }
 
     // Re-initialise

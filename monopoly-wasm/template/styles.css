@@ -206,15 +206,14 @@ button:hover {
 .buttons {
     display: flex;
     flex-direction: row;
-    justify-content: flex-start;
+    justify-content: space-between;
     gap: 8px;
     margin-bottom: 8px;
 }
 
 .buttons button {
     width: 200px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    height: 30px;
 }
 
 /* Leaderboard title */
@@ -231,6 +230,10 @@ button:hover {
 
 .leaderboard {
     margin-left: 4px;
+}
+
+.leaderboard_button {
+    width: 150px;
 }
 
 /* Roll frequency table */

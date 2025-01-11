@@ -1,6 +1,6 @@
-use std::{borrow::Cow, error::Error};
+use std::error::Error;
 
-use nalgebra::DMatrix;
+use nalgebra::Matrix;
 
 pub enum RenderMatrixCb<'a, T> {
     RowColHd(&'a str),
@@ -10,29 +10,51 @@ pub enum RenderMatrixCb<'a, T> {
     Eol,
 }
 
-pub fn render_matrix<T, RH, CH, F>(
-    matrix: &DMatrix<T>,
+pub fn render_matrix<T, R, C, S, RH, CH, F>(
+    matrix: &Matrix<T, R, C, S>,
     colheaders: Option<CH>,
     rowheaders: Option<RH>,
     rowcolhd: &str,
     transpose: bool,
-    mut cb: F,
+    cb: F,
 ) -> Result<(), Box<dyn Error>>
 where
-    T: nalgebra::Scalar,
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<T, R, C>,
+    nalgebra::DefaultAllocator: nalgebra::allocator::Allocator<C, R>,
+    T: Clone + PartialEq + nalgebra::Scalar,
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
     CH: IntoIterator + Clone,
     CH::Item: std::fmt::Display,
     F: FnMut((usize, usize), RenderMatrixCb<T>) -> Result<(), Box<dyn Error>>,
 {
-    // Transpose matric if required
-    let matrix = if transpose {
-        Cow::Owned(matrix.transpose())
+    // Transpose matrix if required
+    if transpose {
+        render_matrix_int(&matrix.transpose(), colheaders, rowheaders, rowcolhd, cb)
     } else {
-        Cow::Borrowed(matrix)
-    };
+        render_matrix_int(matrix, colheaders, rowheaders, rowcolhd, cb)
+    }
+}
 
+pub fn render_matrix_int<T, R, C, S, RH, CH, F>(
+    matrix: &Matrix<T, R, C, S>,
+    colheaders: Option<CH>,
+    rowheaders: Option<RH>,
+    rowcolhd: &str,
+    mut cb: F,
+) -> Result<(), Box<dyn Error>>
+where
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<T, R, C>,
+    RH: IntoIterator + Clone,
+    RH::Item: std::fmt::Display,
+    CH: IntoIterator + Clone,
+    CH::Item: std::fmt::Display,
+    F: FnMut((usize, usize), RenderMatrixCb<T>) -> Result<(), Box<dyn Error>>,
+{
     let yoffset = if colheaders.is_some() { 1 } else { 0 };
     let xoffset = if rowheaders.is_some() { 1 } else { 0 };
 
