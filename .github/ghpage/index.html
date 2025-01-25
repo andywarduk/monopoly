@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en-GB">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Monopoly Probabilities</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <link rel="stylesheet" type="text/css" href="board.css" />
+</head>
+
+<body style="overflow: hidden;">
+    <!-- Loading overlay -->
+    <div id="loading" class="spinner_row">
+        <div class="spinner_col">
+            <div class="spinner"></div>
+            <p id="spinnermsg">Loading...</p>
+            <noscript>
+                <h2>Javascript must be enabled to view this page</h2>
+            </noscript>
+        </div>
+    </div>
+
+    <div id="main" class="main" style="display: none;">
+        <div class="main_col1">
+            <!-- Board table -->
+            <table id="board_tab" class="board_tab">
+                <!-- Generated board goes here -->
+            </table>
+
+            <!-- Roll frequency -->
+            <h3 class="rollfreq_title">Roll Frequency:</h3>
+
+            <div id="rolltable_cols" class="rolltable_cols">
+                <!-- Generated leaderboard goes here -->
+            </div>
+        </div>
+
+        <div class="main_col2">
+            <div class="buttons">
+                <!-- Pause / play button small increment -->
+                <button class="greenbg" id="playpause1"></button>
+
+                <!-- Pause / play button large increment -->
+                <button class="greenbg" id="playpause2"></button>
+
+                <!-- Strategy -->
+                <button class="greenbg" id="strategy"></button>
+            </div>
+
+            <h3 class="stats_title">Game statistics:</h3>
+
+            <div class="stats">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td class="statlabel">Turns taken:</td>
+                            <td id="stat_turns" class="stat"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Single move turns:</td>
+                            <td id="stat_turns_single" class="stat"></td>
+                            <td id="stat_turns_single_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Double move turns:</td>
+                            <td id="stat_turns_double" class="stat"></td>
+                            <td id="stat_turns_double_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Triple move turns:</td>
+                            <td id="stat_turns_triple" class="stat"></td>
+                            <td id="stat_turns_triple_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Double double turns:</td>
+                            <td id="stat_ddoubles" class="stat"></td>
+                            <td id="stat_ddoubles_pct" class="statpct"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Triple double turns:</td>
+                            <td id="stat_tdoubles" class="stat"></td>
+                            <td id="stat_tdoubles_pct" class="statpct"></td>
+                        </tr>
+                        <tr>
+                            <td class="statlabel">Moves made:</td>
+                            <td id="stat_moves" class="stat"></td>
+                        </tr>
+                        <tr class="substat">
+                            <td class="statlabel">Moves from double:</td>
+                            <td id="stat_doubles_tot" class="stat"></td>
+                            <td id="stat_doubles_tot_pct" class="statpct"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="leaderboard_title_div">
+                    <h3 class="leaderboard_title">Leaderboard:</h3>
+                    <!-- Split jail statistics button -->
+                    <button class="greenbg leaderboard_button" id="splitjail"></button>
+
+                    <!-- Full leaderboard -->
+                    <button class="greenbg leaderboard_button" id="fullboard"></button>
+
+                    <!-- Show reasons -->
+                    <button class="greenbg leaderboard_button" id="showreasons"></button>
+                </div>
+
+                <table class="leaderboard">
+                    <thead>
+                        <tr>
+                            <th style="text-align: left;">Space</th>
+                            <th style="text-align: right;">Arrivals</th>
+                            <th style="text-align: right;">Arrival %</th>
+                            <th style="text-align: right;">Expected</th>
+                            <th style="text-align: right;">Error</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard">
+                        <!-- Generated leaderboard goes here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Load the main script -->
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>

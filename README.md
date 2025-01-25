@@ -1,24 +1,32 @@
-# Monopoly Probabilities #
+# Monopoly Probabilities
 
-## WASM version: ##
+## WASM version:
 
-![WASM version](./screenshots/Screenshot-wasm.png)
+[Go to the live page](https://andywarduk.github.io/monopoly/).
 
 rust, cargo and wasm-pack need to be installed to build the WASM version.
 
 To build an html directory containing individual assets and open it in the default browser:
+
 ```bash
 cd monopoly-wasm
-./Build.sh
+./build.sh -o
 ```
 
-To build a stand alone html page (index.htm) and open in the default browser:
+To build a stand alone html page (index.html) and open in the default browser:
+
 ```bash
 cd monopoly-wasm
-./BuildSingle.sh
+./build.sh -s -o
 ```
 
-## Console version: ##
+or run the convenience script:
+
+```bash
+./wasm.sh
+```
+
+## Console version:
 
 ![Console version](./screenshots/Screenshot-tui.png)
 
@@ -28,7 +36,13 @@ rust and cargo need to be installed to run this version.
 cargo run --bin monopoly-tui --release
 ```
 
-## Viewing probability matrices: ##
+or run the convenience script:
+
+```bash
+./tui.sh
+```
+
+## Viewing probability matrices:
 
 Run the following:
 
@@ -36,9 +50,15 @@ Run the following:
 cargo run --bin monopoly-calc --release
 ```
 
+or run the convenience script:
+
+```bash
+./stats.sh
+```
+
 csv files are put in 'csv' directory and a probabilities.xlsx is produced.
 
-## Credits ##
+## Credits
 
 [http://www.tkcs-collins.com/truman/monopoly/monopoly.shtml](http://www.tkcs-collins.com/truman/monopoly/monopoly.shtml)
 
