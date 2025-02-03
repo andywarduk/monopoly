@@ -1,4 +1,4 @@
-use nalgebra::{DMatrix, SMatrix};
+use nalgebra::{Const, DMatrix, DVector, Dyn, OMatrix, SMatrix};
 #[cfg(debug_assertions)]
 use nalgebra::{Dim, Matrix, RawStorage};
 use std::collections::BTreeMap;
@@ -28,7 +28,7 @@ pub struct TransMatrix {
     /// Combined movement and jump transition matrix
     combinedmat: DMatrix<Probability>,
     /// Combined transition matrix steady state vector
-    steady: DMatrix<f64>,
+    steady: OMatrix<f64, Const<1>, Dyn>,
 }
 
 impl TransMatrix {
@@ -44,7 +44,7 @@ impl TransMatrix {
         let (movemat, combinedmat) = Self::build_movemat(&states, &jumpmat, strategy, debug);
 
         // Calculate steady state vector
-        let steady = Self::calc_steady(&combinedmat, &states, accuracydp, debug);
+        let steady = Self::calc_steady(&combinedmat, accuracydp, debug);
 
         Self {
             strategy,
@@ -77,7 +77,7 @@ impl TransMatrix {
     }
 
     /// Returns a reference to the combined steady state matrix
-    pub fn steady(&self) -> &DMatrix<f64> {
+    pub fn steady(&self) -> &OMatrix<f64, Const<1>, Dyn> {
         &self.steady
     }
 
@@ -368,65 +368,41 @@ impl TransMatrix {
     }
 
     /// Calculate the steady state vector from the combined transition matrix
-    fn calc_steady(
-        combinedmat: &DMatrix<Probability>,
-        states: &BTreeMap<State, usize>,
-        accuracydp: u8,
-        debug: bool,
-    ) -> DMatrix<f64> {
+    fn calc_steady(combinedmat: &DMatrix<Probability>, accuracydp: u8, debug: bool) -> OMatrix<f64, Const<1>, Dyn> {
         // Convert combined matrix to floating point
         let combflt = combinedmat.map(|p| p.as_f64());
 
-        // Create steady state matrix for iteration
-        let mut steady = DMatrix::from_element(1, states.len(), (Probability::ALWAYS / states.len()).as_f64());
-
         // Calculate the required accuracy
-        let req_acc = 10f64.powi(-(accuracydp as i32));
+        let epsilon = 10f64.powi(-(accuracydp as i32));
 
-        // Solved flag
-        let mut solved = false;
+        // Set up the system of linear equations
 
-        for i in 0..250 {
-            // Calculate the next state
-            let next_steady = &steady * &combflt;
+        // Transpose the combined matrix (columns all sum to 1.0)
+        let a = combflt.transpose();
 
-            // Get the sum of the next state (should be ~1.0)
-            let next_sum = next_steady.iter().sum::<f64>();
+        // Get row and column count
+        let (rows, cols) = (a.nrows(), a.ncols());
 
-            // Calculate the delta between the current and next state
-            let delta = &next_steady - &steady;
-            let max_delta = delta.iter().map(|x| x.abs()).fold(0.0, |acc: f64, x| acc.max(x));
+        // Subtract the identity matrix
+        let a = a - DMatrix::<f64>::identity(rows, cols);
 
-            if debug {
-                println!(
-                    "Iteration {i}: sum {next_sum} (err {}) max delta {max_delta}",
-                    (1.0 - next_sum).abs()
-                );
-            }
+        // Extend by one row filled with 1.0
+        let a_ext = a.resize(rows + 1, cols, 1.0);
 
-            // Check sum is ~= 1.0
-            #[cfg(debug_assertions)]
-            {
-                let err = (1.0 - next_sum).abs();
-                assert!(err < (100.0 * f64::EPSILON));
-            }
+        // Create the right-hand side vector with the last element as 1
+        // This corresponds to the constraint that the sum of the probabilities is 1
+        let b = DVector::<f64>::zeros(rows).push(1.0);
 
-            // Set next state as current state
-            steady = next_steady;
+        // Solve the system to find the steady state vector
+        let steady = match a_ext.svd(true, true).solve(&b, epsilon) {
+            Ok(steady_state) => steady_state.transpose(),
+            Err(_) => panic!("Unable to solve steady state matrix"),
+        };
 
-            // Reached required accuracy?
-            if max_delta < req_acc {
-                if debug {
-                    println!("Required accuracy found");
-                }
-
-                solved = true;
-
-                break;
-            }
+        if debug {
+            println!("Steady state vector ({}):", steady.ncols());
+            println!("{}", steady.transpose());
         }
-
-        assert!(solved, "Unable to solve steady state matrix");
 
         steady
     }

@@ -1,7 +1,7 @@
 use std::cmp::max;
 
 use monopoly_lib::calc::transmatrix::TransMatrix;
-use nalgebra::DMatrix;
+use nalgebra::{DMatrix, Matrix};
 
 use crate::matrix::{RenderMatrixCb, render_matrix};
 
@@ -22,14 +22,18 @@ pub fn print_steady(mat: &TransMatrix, desc: &str) {
 
 // Generic matrix print functions
 
-pub fn print_matrix<T, RH, CH>(
-    matrix: &DMatrix<T>,
+pub fn print_matrix<T, R, C, S, RH, CH>(
+    matrix: &Matrix<T, R, C, S>,
     colheaders: Option<CH>,
     rowheaders: Option<RH>,
     rowcolhd: &str,
     transpose: bool,
 ) where
     T: nalgebra::Scalar + std::fmt::Display,
+    R: nalgebra::Dim,
+    C: nalgebra::Dim,
+    S: nalgebra::RawStorage<T, R, C>,
+    nalgebra::DefaultAllocator: nalgebra::allocator::Allocator<C, R>,
     RH: IntoIterator + Clone,
     RH::Item: std::fmt::Display,
     CH: IntoIterator + Clone,
