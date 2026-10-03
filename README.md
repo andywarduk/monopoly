@@ -18,6 +18,9 @@ There are three front ends:
   - The WASM target: `rustup target add wasm32-unknown-unknown`
   - [wasm-pack](https://rustwasm.github.io/wasm-pack/). It downloads wasm-bindgen and binaryen on first use.
   - `python3`, to serve the html directory when using `-o` without `-s`
+  - Optionally [cargo-about](https://github.com/EmbarkStudios/cargo-about)
+    (`cargo install --locked --features cli cargo-about`), to regenerate the third party licences page after
+    updating dependencies
 
 Run the scripts below from the root of the repository.
 
@@ -95,6 +98,11 @@ cargo test --workspace
 [Exploring strategies in Monopoly using Markov chains and simulation - Albert Nilsson](https://www.diva-portal.org/smash/get/diva2:1471765/FULLTEXT01.pdf)
 
 [Raleway font - The Raleway Project Authors](https://github.com/impallari/Raleway), licensed under the SIL Open Font License
+
+## Licence
+
+MIT, see [LICENSE](LICENSE). The Raleway font is licensed separately under the SIL Open Font License, see
+[OFL.txt](monopoly-wasm/template/OFL.txt).
 
 ## Disclaimer
 

@@ -77,6 +77,14 @@ wasm-pack build --target web || exit 1
 # Run cargo to build the packaging binary
 cargo build --manifest-path package/Cargo.toml --release || exit 1
 
+# Regenerate the third party licences page if cargo-about is installed
+if command -v cargo-about > /dev/null
+then
+	cargo about generate --config about.toml --output-file template/licences.html about.hbs || exit 1
+else
+	echo "cargo-about not installed, using existing template/licences.html"
+fi
+
 if [ "$SINGLE" == "Y" ]
 then
 	# Package in to the single directory

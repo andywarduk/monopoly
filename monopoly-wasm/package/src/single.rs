@@ -113,7 +113,7 @@ fn convert_to_data_url_handler(
     // Work out the MIME type for the link
     let mime_type = match infile.extension() {
         Some(ext) => match ext.to_str() {
-            Some("htm") => "text/html",
+            Some("htm") | Some("html") => "text/html",
             Some("css") => "text/css",
             Some("js") => "text/javascript",
             Some("wasm") => "application/wasm",

@@ -5,6 +5,8 @@
         url("Raleway-Regular.woff") format("woff");
 }
 
+/* CSS reset from https://www.joshwcomeau.com/css/custom-css-reset/ */
+
 /* Use a more-intuitive box-sizing model */
 *,
 *::before,
@@ -216,6 +218,23 @@ button:hover {
 .buttons button {
     width: 200px;
     height: 30px;
+}
+
+/* Strategy button with licences link underneath */
+.strategy_div {
+    position: relative;
+}
+
+/* Licences link (positioned so it doesn't push the content below down) */
+.licences {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-color-dim);
 }
 
 /* Leaderboard title */

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 authors = ["Andrew Ward (andy.ward.uk@gmail.com)"]
 description = "Monopoly probablility library"
+license = "MIT"
 
 [dependencies]
 rand = "0.10.3"

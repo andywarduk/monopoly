@@ -3,6 +3,7 @@ name = "monopoly-calc"
 version = "0.1.0"
 edition = "2024"
 description = "Dump calculated Monopoly probability matrices to XLS/CSV"
+license = "MIT"
 
 [dependencies]
 monopoly-lib = { path = "../monopoly-lib" }

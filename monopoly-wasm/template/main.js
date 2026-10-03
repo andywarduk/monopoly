@@ -337,6 +337,10 @@ function setup_buttons() {
     const strategy = document.getElementById("strategy");
     strategy.onclick = strategy_click;
 
+    // Set up licences link
+    const licences = document.getElementById("licences");
+    licences.onclick = licences_click;
+
     // Display the board
     const main = document.getElementById("main");
     main.style.display = "flex";
@@ -1300,5 +1304,21 @@ function update_strategy_button() {
         btn.innerText = "Pay to Exit Jail";
     } else {
         btn.innerText = "Roll to Exit Jail";
+    }
+}
+
+// Licences link
+
+function licences_click(event) {
+    // Licences link click handler
+    const href = event.currentTarget.href;
+
+    if (href.startsWith("data:")) {
+        // Browsers won't open data URLs (single page build) in a new tab, so open via a blob URL
+        event.preventDefault();
+
+        fetch(href)
+            .then((response) => response.blob())
+            .then((blob) => window.open(URL.createObjectURL(blob), "_blank"));
     }
 }
