@@ -91,6 +91,9 @@ then
 		launch_url index.html
 	fi
 else
+	# Remove previous html directory so stale assets are not left behind
+	rm -rf html || exit 1
+
 	# Package in to the html directory
 	../target/release/package template/index.html html || exit 1
 

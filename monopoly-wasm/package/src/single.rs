@@ -119,6 +119,7 @@ fn convert_to_data_url_handler(
             Some("wasm") => "application/wasm",
             Some("ico") => "image/x-icon",
             Some("woff") => "font/woff",
+            Some("txt") => "text/plain",
             _ => "application/octet-stream",
         },
         None => "application/octet-stream",

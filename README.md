@@ -94,6 +94,8 @@ cargo test --workspace
 
 [Exploring strategies in Monopoly using Markov chains and simulation - Albert Nilsson](https://www.diva-portal.org/smash/get/diva2:1471765/FULLTEXT01.pdf)
 
+[Raleway font - The Raleway Project Authors](https://github.com/impallari/Raleway), licensed under the SIL Open Font License
+
 ## Disclaimer
 
 MONOPOLY is a trademark of Hasbro. This project is not affiliated with or endorsed by Hasbro.

@@ -1,8 +1,8 @@
-/* Monopoly font face */
+/* Raleway font face (SIL Open Font License, see OFL.txt) */
 @font-face {
-    font-family: "Kabel";
+    font-family: "Raleway";
     src:
-        url("Kabel_Regular.woff") format("woff");
+        url("Raleway-Regular.woff") format("woff");
 }
 
 /* Use a more-intuitive box-sizing model */
@@ -47,7 +47,9 @@ body {
     /* Improve text rendering */
     -webkit-font-smoothing: antialiased;
     /* Default font */
-    font-family: 'Kabel', Arial, Helvetica, sans-serif;
+    font-family: 'Raleway', Arial, Helvetica, sans-serif;
+    /* Raleway defaults to old style numerals */
+    font-variant-numeric: lining-nums;
     background-color: var(--bg-color);
     color: var(--text-color);
 }

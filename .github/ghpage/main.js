@@ -353,7 +353,7 @@ function create_title_td() {
     div1.setAttribute("class", "title_div");
 
     const div2 = document.createElement("div");
-    div1.setAttribute("class", "title_border");
+    div2.setAttribute("class", "title_border");
 
     const h1 = document.createElement("h1");
     h1.setAttribute("class", "title");
