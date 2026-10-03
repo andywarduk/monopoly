@@ -6,9 +6,9 @@ authors = ["Andrew Ward (andy.ward.uk@gmail.com)"]
 description = "Monopoly probablility library"
 
 [dependencies]
-rand = "0.8.5"
+rand = "0.10.3"
 num-traits = "0.2.19"
-num-derive = "0.4.2"
-strum = { version = "0.26", features = ["derive"] }
-nalgebra = "0.33.2"
-itertools = "0.14.0"
+num-derive = "0.5.1"
+strum = { version = "0.28.0", features = ["derive"] }
+nalgebra = "0.35.0"
+itertools = "0.15.0"

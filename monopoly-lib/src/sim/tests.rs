@@ -288,7 +288,7 @@ fn test_chance_to_cc_to_go() {
     board.turn_with_dice(|_board, _doubles| (2, 3));
 
     assert_eq!(board.position, go);
-    assert_eq!(board.arrival_reason[go][MoveReason::CCCard as usize], 1);
+    assert_eq!(board.arrival_reason[go][MoveReason::CHCardCCCard as usize], 1);
     assert_eq!(board.arrivals[go], 1);
 
     // Check counts

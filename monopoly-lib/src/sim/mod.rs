@@ -40,7 +40,7 @@ impl Board {
     /// Create a new board with a given strategy and car selection method
     pub fn new(strategy: Strategy, randomcard: bool) -> Self {
         // Create random number generator
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
 
         // Set up community chest card deck
         let mut ccdeck = CCCard::build_deck();
@@ -252,7 +252,7 @@ impl Board {
     /// Shuffles a deck of cards
     fn shuffle_deck<T: Copy>(rng: &mut ThreadRng, deck: &mut VecDeque<T>) {
         for _ in 0..(deck.len() * 4) {
-            let elem = rng.gen_range(0..(deck.len()));
+            let elem = rng.random_range(0..(deck.len()));
 
             let card = deck.remove(elem).unwrap();
 
@@ -262,7 +262,7 @@ impl Board {
 
     /// Choose a randon card
     fn random_card<T: Copy>(rng: &mut ThreadRng, deck: &mut VecDeque<T>) -> T {
-        let elem = rng.gen_range(0..deck.len());
+        let elem = rng.random_range(0..deck.len());
         deck[elem]
     }
 
@@ -319,7 +319,7 @@ impl Board {
 
     /// Roll a single die
     fn die_roll(&mut self) -> u8 {
-        self.rng.gen_range(1..=6)
+        self.rng.random_range(1..=6)
     }
 }
 

@@ -10,6 +10,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 monopoly-lib = { path = "../monopoly-lib" }
-wasm-bindgen = "0.2"
-getrandom = { version = "0.2", features = ["js"] }
-strum = { version = "0.26", features = ["derive"] }
+wasm-bindgen = "0.2.129"
+getrandom = { version = "0.4.3", features = ["wasm_js"] }
+strum = { version = "0.28.0", features = ["derive"] }

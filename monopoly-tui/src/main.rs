@@ -103,7 +103,7 @@ where
             w.flush()?;
 
             // Auto pause?
-            if board.turns() % 100_000_000 == 0 {
+            if board.turns().is_multiple_of(100_000_000) {
                 state.paused = true;
             }
 
